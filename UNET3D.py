@@ -32,8 +32,6 @@ import json
 with open('param.json') as json_file:
     config = json.load(json_file)
 
-
-
 # Data directory
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x"
 
@@ -73,7 +71,7 @@ class Net(pytorch_lightning.LightningModule):
         data_dicts = [
             {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
         ]
-        # training files are all the Voxels but the last 9, the validation files are the last nine .nii files
+        # training files are all the Voxels but the last 2, the validation files are the last nine .nii files
         train_files, val_files = data_dicts[:-2], data_dicts[-2:]
 
         # set deterministic training for reproducibility
@@ -83,16 +81,16 @@ class Net(pytorch_lightning.LightningModule):
             [
                 LoadImaged(keys=["raw", "bg", "label"]),
                 EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
-                SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
-                ConcatItemsd(keys=["raw", "bg"], name="image", dim=0),
+                SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding
+                ConcatItemsd(keys=["raw", "bg"], name="image", dim=0), # stacks bg and raw into a tensor with 2 channels
                 NormalizeIntensityd(
                     keys = "image",
                     nonzero = True,
-                ),
+                ), # Normalization values between 0 and 1
                 Lambdad(
                     keys='label', 
                     func=lambda x: (x > 0.5).astype(np.float32)
-                    ),
+                    ), # threshhold opration for the binray mask either 1 or 0
             ])
         val_transforms = Compose(
             [
