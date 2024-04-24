@@ -14,4 +14,3 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nice=1000
 #SBATCH --qos=gpu_normal
-##SBATCH -w supergpu02
