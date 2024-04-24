@@ -1,0 +1,29 @@
+{
+    "data_dir": "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x",
+    "log_dir": "",
+    "model_params": {
+        "spatial_dims": 3,
+        "in_channels": 2,
+        "out_channels": 2,
+        "channels": [16, 32, 64, 128, 256],
+        "strides": [2, 2, 2, 2],
+        "num_res_units": 2,
+        "norm_type": "BATCH"
+    },
+    "training_params": {
+        "max_epochs": 7,
+        "batch_size": 1,
+        "learning_rate": 0.0001,
+        "roi_size": [160, 160, 160],
+        "sw_batch_size": 4,
+        "num_workers": 4,
+        "num_sanity_val_steps": 1,
+        "log_every_n_steps": 2,
+        "cache_rate": 1.0,
+        "spatial_size": [320, 320, 320]
+    },
+    "transform_params": {
+        "normalize_intensity_nonzero": true,
+        "label_threshold": 0.5
+    }
+}
