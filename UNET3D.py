@@ -50,7 +50,7 @@ class Net(pytorch_lightning.LightningModule):
         )
         #########
         self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
-        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=2)])
+        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=2)]) #1 nicht 2!!
         self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=2)])
         self.dice_metric = DiceMetric(include_background=False, reduction="mean", get_not_nans=False)
         ##########
@@ -89,7 +89,7 @@ class Net(pytorch_lightning.LightningModule):
                 ), # Normalization values between 0 and 1
                 Lambdad(
                     keys='label', 
-                    func=lambda x: (x > 0.5).astype(np.float32)
+                    func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
                     ), # threshhold opration for the binray mask either 1 or 0
             ])
         val_transforms = Compose(
@@ -104,7 +104,7 @@ class Net(pytorch_lightning.LightningModule):
                 ),
                 Lambdad(
                     keys='label', 
-                    func=lambda x: (x > 0.5).astype(np.float32)
+                    func=lambda x: (x >= 0.5).astype(np.float32)
                     ),
             ])
 
@@ -149,14 +149,14 @@ class Net(pytorch_lightning.LightningModule):
         images, labels = batch["image"], batch["label"]
         output = self.forward(images)
         loss = self.loss_function(output, labels)
-        tensorboard_logs = {"train_loss": loss.item()}
+        tensorboard_logs = {"train_loss": loss.item()} #später!!!
         return {"loss": loss, "log": tensorboard_logs}
 
     def validation_step(self, batch, batch_idx):
         images, labels = batch["image"], batch["label"]
         roi_size = (160, 160, 160)
         sw_batch_size = 4
-        outputs = sliding_window_inference(images, roi_size, sw_batch_size, self.forward)
+        outputs = sliding_window_inference(images, roi_size, sw_batch_size, self.forward) #nur mit self.forward(), genau wie training_step!!!!
         loss = self.loss_function(outputs, labels)
         outputs = [self.post_pred(i) for i in decollate_batch(outputs)]
         labels = [self.post_label(i) for i in decollate_batch(labels)]
