@@ -149,14 +149,15 @@ class Net(pytorch_lightning.LightningModule):
         images, labels = batch["image"], batch["label"]
         output = self.forward(images)
         loss = self.loss_function(output, labels)
-        tensorboard_logs = {"train_loss": loss.item()} #später!!!
+        vi = {"train_loss": loss.item()} #später!!!
         return {"loss": loss, "log": tensorboard_logs}
 
     def validation_step(self, batch, batch_idx):
         images, labels = batch["image"], batch["label"]
-        roi_size = (160, 160, 160)
-        sw_batch_size = 4
-        outputs = sliding_window_inference(images, roi_size, sw_batch_size, self.forward) #nur mit self.forward(), genau wie training_step!!!!
+        #roi_size = (160, 160, 160)
+        #sw_batch_size = 4
+        #outputs = sliding_window_inference(images, roi_size, sw_batch_size, self.forward) #nur mit self.forward(), genau wie training_step!!!!
+        outputs = self.forward(images)
         loss = self.loss_function(outputs, labels)
         outputs = [self.post_pred(i) for i in decollate_batch(outputs)]
         labels = [self.post_label(i) for i in decollate_batch(labels)]
@@ -195,7 +196,7 @@ class Net(pytorch_lightning.LightningModule):
 net = Net()
 
 # set up loggers and checkpoints
-log_dir = os.path.join("/home/iterm/hazem.abdel-rehim/MA", "logs")
+log_dir = os.path.join("/lustre/groups/iterm/Hazem/MA/hpc", "logs")
 tb_logger = pytorch_lightning.loggers.TensorBoardLogger(save_dir=log_dir)
 
 # initialise Lightning's trainer.
