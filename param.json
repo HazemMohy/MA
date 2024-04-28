@@ -1,6 +1,6 @@
 {
     "data_dir": "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x",
-    "log_dir": "",
+    "log_dir": "/lustre/groups/iterm/Hazem/MA/HPC/logs",
     "model_params": {
         "spatial_dims": 3,
         "in_channels": 2,
@@ -10,13 +10,11 @@
         "num_res_units": 2,
         "norm_type": "BATCH"
     },
+    
     "training_params": {
         "max_epochs": 7,
         "batch_size": 1,
         "learning_rate": 0.0001,
-        "roi_size": [160, 160, 160],
-        "sw_batch_size": 4,
-        "num_workers": 4,
         "num_sanity_val_steps": 1,
         "log_every_n_steps": 2,
         "cache_rate": 1.0,
