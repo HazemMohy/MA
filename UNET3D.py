@@ -50,8 +50,8 @@ class Net(pytorch_lightning.LightningModule):
         )
         #########
         self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
-        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=1)]) #1 nicht 2!!
-        self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=1)])
+        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=True)]) #1 nicht 2!!
+        self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=True)])
         self.dice_metric = DiceMetric(include_background=False, reduction="mean", get_not_nans=False)
         ##########
         self.best_val_dice = 0
