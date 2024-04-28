@@ -149,7 +149,7 @@ class Net(pytorch_lightning.LightningModule):
         images, labels = batch["image"], batch["label"]
         output = self.forward(images)
         loss = self.loss_function(output, labels)
-        vi = {"train_loss": loss.item()} #später!!!
+        tensorboard_logs = {"train_loss": loss.item()} #später!!!
         return {"loss": loss, "log": tensorboard_logs}
 
     def validation_step(self, batch, batch_idx):
