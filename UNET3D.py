@@ -36,7 +36,7 @@ with open('param.json') as json_file:
 
 # args parser
 parser = argparse.ArgumentParser()
-parser.add_argument(“—job, type=str, required=True)
+parser.add_argument(“--job, type=str, required=True)
 args = parser.parse_args()
 
 # Data directory
