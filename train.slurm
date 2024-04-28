@@ -12,8 +12,10 @@
 #SBATCH --qos=gpu_normal
 ##SBATCH -w supergpu02
 
-eval "$(conda shell.bash hook)"
-conda activate Masterarbeit
+
+source /lustre/groups/iterm/Hazem/miniconda3/bin/activate Masterarbeit
+##eval "$(conda shell.bash hook)"
+##conda activate Masterarbeit
 echo "env activated"
 
 echo "Time Loacation"
