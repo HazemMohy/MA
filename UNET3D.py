@@ -27,10 +27,17 @@ import os
 import glob
 import numpy as np
 import json
+import argparse
+import shutil
 
 # parse the parameters from json file
 with open('param.json') as json_file:
     config = json.load(json_file)
+
+# args parser
+parser = argparse.ArgumentParser()
+parser.add_argument(“—job, type=str, required=True)
+args = parser.parse_args()
 
 # Data directory
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x"
@@ -142,7 +149,7 @@ class Net(pytorch_lightning.LightningModule):
         return val_loader
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self._model.parameters(), lr=1e-4)
+        optimizer = torch.optim.Adam(self._model.parameters(), lr=1e-5)
         return optimizer
 
     def training_step(self, batch, batch_idx):
@@ -196,7 +203,9 @@ class Net(pytorch_lightning.LightningModule):
 net = Net()
 
 # set up loggers and checkpoints
-log_dir = os.path.join("/lustre/groups/iterm/Hazem/MA/HPC", "logs")
+
+log_dir = os.path.join("/lustre/groups/iterm/Hazem/MA/HPC/logs/", args.job)
+os.makedirs(log_dir, exist_ok=True)
 tb_logger = pytorch_lightning.loggers.TensorBoardLogger(save_dir=log_dir)
 
 # initialise Lightning's trainer.
@@ -214,4 +223,4 @@ trainer.fit(net)
 
 print(f"train completed, best_metric: {net.best_val_dice:.4f} " f"at epoch {net.best_val_epoch}")
 
-
+shutil.make_archive(log_dir, 'zip', log_dir)
