@@ -196,7 +196,7 @@ class Net(pytorch_lightning.LightningModule):
 net = Net()
 
 # set up loggers and checkpoints
-log_dir = os.path.join("/lustre/groups/iterm/Hazem/MA/hpc", "logs")
+log_dir = os.path.join("/lustre/groups/iterm/Hazem/MA/HPC", "logs")
 tb_logger = pytorch_lightning.loggers.TensorBoardLogger(save_dir=log_dir)
 
 # initialise Lightning's trainer.

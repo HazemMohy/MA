@@ -2,8 +2,8 @@
 
 #SBATCH -c 16
 #SBATCH -J 3D_Seg_UNET
-#SBATCH --output=/lustre/groups/iterm/Hazem/MA/hpc/slurm_outputs/3D_Seg_%j_output.txt
-#SBATCH --error=/lustre/groups/iterm/Hazem/MA/hpc/slurm_outputs/3D_Seg_%j_error.txt
+#SBATCH --output=/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_%j_output.txt
+#SBATCH --error=/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_%j_error.txt
 #SBATCH -p gpu_p
 #SBATCH --gres=gpu:2
 #SBATCH --mem=160G
