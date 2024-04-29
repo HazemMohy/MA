@@ -137,7 +137,7 @@ class Net(pytorch_lightning.LightningModule):
     def train_dataloader(self):
         train_loader = DataLoader(
             self.train_ds,
-            batch_size=1,
+            batch_size=4, #increased to 4
             shuffle=False,
             num_workers=4,
             collate_fn=list_data_collate,
@@ -149,11 +149,11 @@ class Net(pytorch_lightning.LightningModule):
         return val_loader
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self._model.parameters(), lr=1e-5)
+        optimizer = torch.optim.Adam(self._model.parameters(), lr=1e-3)
         return optimizer
 
     def training_step(self, batch, batch_idx):
-        images, labels = batch["image"], batch["label"]
+        images, labels = batch["image"], batch["label"] #images, labels, outputs abspeichern und auf Laptop schauen
         output = self.forward(images)
         loss = self.loss_function(output, labels)
         tensorboard_logs = {"train_loss": loss.item()} #später!!!
