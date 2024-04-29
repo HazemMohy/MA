@@ -211,7 +211,7 @@ tb_logger = pytorch_lightning.loggers.TensorBoardLogger(save_dir=log_dir)
 # initialise Lightning's trainer.
 trainer = pytorch_lightning.Trainer(
     devices=[0],
-    max_epochs=100,
+    max_epochs=10,
     logger=tb_logger,
     enable_checkpointing=True,
     num_sanity_val_steps=1,
