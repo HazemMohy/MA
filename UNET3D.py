@@ -246,7 +246,7 @@ trainer = pytorch_lightning.Trainer(
     logger=tb_logger,
     enable_checkpointing=True,
     num_sanity_val_steps=1,
-    log_every_n_steps=5,
+    log_every_n_steps=1,
 )
 
 # train
