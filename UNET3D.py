@@ -245,7 +245,7 @@ trainer = pytorch_lightning.Trainer(
     max_epochs=50,
     logger=tb_logger,
     enable_checkpointing=True,
-    num_sanity_val_steps=1,
+    num_sanity_val_steps=0,
     log_every_n_steps=1,
 )
 
