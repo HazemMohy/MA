@@ -40,7 +40,7 @@ parser.add_argument("--job", type=str, required=True)
 args = parser.parse_args()
 
 # Data directory
-data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x"
+data_dir= "/lustre/groups/iterm/Hazem/MA/data/2x"
 
 #add device
 #device = torch.device("cuda:0")

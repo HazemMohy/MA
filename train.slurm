@@ -18,7 +18,4 @@ eval "$(conda shell.bash hook)"
 conda activate Masterarbeit
 echo "env activated"
 
-echo "Time Loacation"
-which time
-
 srun python -u UNET3D.py --job $SLURM_JOB_ID
