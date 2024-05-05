@@ -98,6 +98,10 @@ class Net(pytorch_lightning.LightningModule):
                     keys='label', 
                     func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
                     ), # threshhold opration for the binray mask either 1 or 0
+                Lambdad(
+                    keys='image',
+                    func=lambda x: (x/x.max()).astype(np.float32)
+                ),
             ])
         val_transforms = Compose(
             [
@@ -113,6 +117,10 @@ class Net(pytorch_lightning.LightningModule):
                     keys='label', 
                     func=lambda x: (x >= 0.5).astype(np.float32)
                     ),
+                Lambdad(
+                    keys='image',
+                    func=lambda x: (x/x.max()).astype(np.float32)
+                ),
             ])
 
         # we use cached datasets - these are 10x faster than regular datasets but succeptible to RAM overflow
