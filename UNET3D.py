@@ -43,7 +43,7 @@ args = parser.parse_args()
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x"
 
 #add device
-device = torch.device("cuda:0")
+#device = torch.device("cuda:0")
 
 # Define the lighting module
 class Net(pytorch_lightning.LightningModule):
@@ -57,7 +57,7 @@ class Net(pytorch_lightning.LightningModule):
             strides=(2, 2, 2, 2),
             num_res_units=2,
             norm=Norm.BATCH,
-        ).to(device) #device added
+        )#.to(device) #device added
         #########
         #self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
         self.loss_function = DiceLoss(to_onehot_y=True, sigmoid=True) #switched from the softmax function to the sigmoid one
