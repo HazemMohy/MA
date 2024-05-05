@@ -29,6 +29,8 @@ import numpy as np
 import json
 import argparse
 import shutil
+import torchvision.utils as vutils
+
 
 # parse the parameters from json file
 with open('param.json') as json_file:
@@ -172,26 +174,53 @@ class Net(pytorch_lightning.LightningModule):
         optimizer = torch.optim.Adam(self._model.parameters(), lr=1e-3)
         return optimizer
 
-    def training_step(self, batch, batch_idx):
-        images, labels = batch["image"], batch["label"] #images, labels, outputs (the next line) abspeichern und auf Laptop schauen
-        output = self.forward(images)
-        loss = self.loss_function(output, labels)
-        tensorboard_logs = {"train_loss": loss.item()} #später!!!
-        return {"loss": loss, "log": tensorboard_logs}
+    #def training_step(self, batch, batch_idx):
+        #images, labels = batch["image"], batch["label"] #images, labels, outputs (the next line) abspeichern und auf Laptop schauen
+        #output = self.forward(images)
+        #loss = self.loss_function(output, labels)
+        #tensorboard_logs = {"train_loss": loss.item()} #später!!!
+        #return {"loss": loss, "log": tensorboard_logs}
 
-    def validation_step(self, batch, batch_idx):
-        images, labels = batch["image"], batch["label"]
+    def training_step(self, batch, batch_idx):
+    images, labels = batch["image"], batch["label"]
+    outputs = self.forward(images)
+    loss = self.loss_function(outputs, labels)
+    # Log images once every 100 steps or every epoch; adjust based on your needs
+    if batch_idx % 100 == 0:
+        self.log_images(images, labels, outputs, "train", batch_idx)
+    self.log("train_loss", loss)
+    return loss
+
+    #def validation_step(self, batch, batch_idx):
+        #images, labels = batch["image"], batch["label"]
         #roi_size = (160, 160, 160)
         #sw_batch_size = 4
         #outputs = sliding_window_inference(images, roi_size, sw_batch_size, self.forward) #nur mit self.forward(), genau wie training_step!!!!
+        #outputs = self.forward(images)
+        #loss = self.loss_function(outputs, labels)
+        #outputs = [self.post_pred(i) for i in decollate_batch(outputs)]
+        #labels = [self.post_label(i) for i in decollate_batch(labels)]
+        #self.dice_metric(y_pred=outputs, y=labels)
+        #d = {"val_loss": loss, "val_number": len(outputs)}
+        #self.validation_step_outputs.append(d)
+        #return d
+
+    def validation_step(self, batch, batch_idx):
+        images, labels = batch["image"], batch["label"]
         outputs = self.forward(images)
         loss = self.loss_function(outputs, labels)
-        outputs = [self.post_pred(i) for i in decollate_batch(outputs)]
-        labels = [self.post_label(i) for i in decollate_batch(labels)]
-        self.dice_metric(y_pred=outputs, y=labels)
-        d = {"val_loss": loss, "val_number": len(outputs)}
-        self.validation_step_outputs.append(d)
-        return d
+        self.log_images(images, labels, outputs, "val", batch_idx)
+        return {"val_loss": loss}
+
+    def log_images(self, images, labels, outputs, phase, step):
+    # Select the first image in the batch to log
+        img_grid = vutils.make_grid(images[:1], normalize=True, scale_each=True)
+        lbl_grid = vutils.make_grid(labels[:1], normalize=True, scale_each=True)
+        out_grid = vutils.make_grid(torch.sigmoid(outputs)[:1], normalize=True, scale_each=True)
+
+        self.logger.experiment.add_image(f"{phase}/Images", img_grid, step)
+        self.logger.experiment.add_image(f"{phase}/Labels", lbl_grid, step)
+        self.logger.experiment.add_image(f"{phase}/Outputs", out_grid, step)
 
     def on_validation_epoch_end(self):
         val_loss, num_items = 0, 0
