@@ -100,12 +100,12 @@ class Net(pytorch_lightning.LightningModule):
             [
                 LoadImaged(keys=["raw", "bg", "label"]),
                 EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
-                SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding
+                SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
                 ConcatItemsd(keys=["raw", "bg"], name="image", dim=0), # stacks bg and raw into a tensor with 2 channels
                 NormalizeIntensityd(
                     keys = "image",
                     nonzero = True,
-                ), # Normalization values between 0 and 1
+                ), # Normalization values between 0 and 1 #Normalization: Ensure that it correctly scales the image intensities as expected by your model.
                 Lambdad(
                     keys='label', 
                     func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
@@ -173,7 +173,7 @@ class Net(pytorch_lightning.LightningModule):
         return optimizer
 
     def training_step(self, batch, batch_idx):
-        images, labels = batch["image"], batch["label"] #images, labels, outputs abspeichern und auf Laptop schauen
+        images, labels = batch["image"], batch["label"] #images, labels, outputs (the next line) abspeichern und auf Laptop schauen
         output = self.forward(images)
         loss = self.loss_function(output, labels)
         tensorboard_logs = {"train_loss": loss.item()} #später!!!
@@ -216,6 +216,17 @@ class Net(pytorch_lightning.LightningModule):
         )
         self.validation_step_outputs.clear()  # free memory
         return {"log": tensorboard_logs}
+
+
+# Debugging data loading
+def debug_data_loading(loader):
+    for i, data in enumerate(loader):
+        print(f"Batch {i + 1}")
+        print(f"Images shape: {data['image'].shape}, Labels shape: {data['label'].shape}")
+        print(f"Images max: {data['image'].max()}, Images min: {data['image'].min()}")
+        print(f"Labels max: {data['label'].max()}, Labels min: {data['label'].min()}")
+        if i == 0:  # Only print one batch for brevity
+            break
 
 
 # Training
