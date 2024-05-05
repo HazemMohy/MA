@@ -182,14 +182,14 @@ class Net(pytorch_lightning.LightningModule):
         #return {"loss": loss, "log": tensorboard_logs}
 
     def training_step(self, batch, batch_idx):
-    images, labels = batch["image"], batch["label"]
-    outputs = self.forward(images)
-    loss = self.loss_function(outputs, labels)
-    # Log images once every 100 steps or every epoch; adjust based on your needs
-    if batch_idx % 100 == 0:
-        self.log_images(images, labels, outputs, "train", batch_idx)
-    self.log("train_loss", loss)
-    return loss
+        images, labels = batch["image"], batch["label"]
+        outputs = self.forward(images)
+        loss = self.loss_function(outputs, labels)
+        # Log images once every 100 steps or every epoch; adjust based on your needs
+        if batch_idx % 100 == 0:
+            self.log_images(images, labels, outputs, "train", batch_idx)
+        self.log("train_loss", loss)
+        return loss
 
     #def validation_step(self, batch, batch_idx):
         #images, labels = batch["image"], batch["label"]
