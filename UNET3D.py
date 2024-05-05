@@ -90,7 +90,7 @@ class Net(pytorch_lightning.LightningModule):
             {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
         ]
         # training files are all the Voxels but the last 9, the validation files are the last nine .nii files
-        train_files, val_files = data_dicts[:-9], data_dicts[-9:] #increased the validation files from 2 to 9
+        train_files, val_files = data_dicts[:-2], data_dicts[-2:] #increased the validation files from 2 to 9
 
 
         # set deterministic training for reproducibility
