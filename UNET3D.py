@@ -42,6 +42,9 @@ args = parser.parse_args()
 # Data directory
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x"
 
+#add device
+device = torch.device("cuda:0")
+
 # Define the lighting module
 class Net(pytorch_lightning.LightningModule):
     def __init__(self):
@@ -54,12 +57,20 @@ class Net(pytorch_lightning.LightningModule):
             strides=(2, 2, 2, 2),
             num_res_units=2,
             norm=Norm.BATCH,
-        )
+        ).to(device) #device added
         #########
-        self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
-        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=None)]) #1 nicht 2!!
-        self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=None)])
-        self.dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+        #self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
+        self.loss_function = DiceLoss(to_onehot_y=True, sigmoid=True) #switched from the softmax function to the sigmoid one
+        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=None)]) #to_onehot?
+        self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=None)]) #to_onehot?
+        self.dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background
+
+        #self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
+        #self.post_pred = Compose([AsDiscrete(argmax=True, to_onehot=2)])
+        #self.post_label = Compose([AsDiscrete(to_onehot=2)])
+        #self.dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
+        
+        #https://github.com/Project-MONAI/MONAI/discussions/1727
         ##########
         self.best_val_dice = 0
         self.best_val_epoch = 0
@@ -78,8 +89,9 @@ class Net(pytorch_lightning.LightningModule):
         data_dicts = [
             {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
         ]
-        # training files are all the Voxels but the last 2, the validation files are the last nine .nii files
-        train_files, val_files = data_dicts[:-2], data_dicts[-2:]
+        # training files are all the Voxels but the last 9, the validation files are the last nine .nii files
+        train_files, val_files = data_dicts[:-9], data_dicts[-9:] #increased the validation files from 2 to 9
+
 
         # set deterministic training for reproducibility
         set_determinism(seed=0)
@@ -100,7 +112,7 @@ class Net(pytorch_lightning.LightningModule):
                     ), # threshhold opration for the binray mask either 1 or 0
                 Lambdad(
                     keys='image',
-                    func=lambda x: (x/x.max()).astype(np.float32)
+                    func=lambda x: (x/x.max()).astype(np.float32) #to resolve the invalid values-issue (only 0's and 1's)
                 ),
             ])
         val_transforms = Compose(
