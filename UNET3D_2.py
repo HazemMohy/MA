@@ -22,6 +22,7 @@ import glob
 import numpy as np
 import argparse
 import shutil
+import json
 
 # parse the parameters from json file
 with open('param.json') as json_file:
