@@ -94,10 +94,10 @@ class Net(pytorch_lightning.LightningModule):
                     keys = "image",
                     nonzero = True,
                 ), # Normalization values between 0 and 1
-                #Lambdad(
-                    #keys='label', 
-                    #func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
-                    #), # threshhold opration for the binray mask either 1 or 0
+                Lambdad(
+                    keys='label', 
+                    func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
+                    ), # threshhold opration for the binray mask either 1 or 0
             ])
         val_transforms = Compose(
             [
