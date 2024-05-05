@@ -157,7 +157,7 @@ class Net(pytorch_lightning.LightningModule):
     def train_dataloader(self):
         train_loader = DataLoader(
             self.train_ds,
-            batch_size=4, #increased to 4
+            batch_size=1, #increased to 4
             shuffle=False,
             num_workers=4,
             collate_fn=list_data_collate,
