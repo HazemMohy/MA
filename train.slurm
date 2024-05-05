@@ -21,4 +21,4 @@ echo "env activated"
 echo "Time Loacation"
 which time
 
-python -u UNET3D.py --job $SLURM_JOB_ID
+python -u UNET3D_2.py --job $SLURM_JOB_ID
