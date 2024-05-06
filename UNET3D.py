@@ -218,6 +218,8 @@ class Net(pytorch_lightning.LightningModule):
             f"current mean dice: {mean_val_dice:.4f}"
             f"\nbest mean dice: {self.best_val_dice:.4f} "
             f"at epoch: {self.best_val_epoch}"
+            f"at epoch: {self.val_loss}" #added validation loss zu printen
+            
         )
         self.validation_step_outputs.clear()  # free memory
         return {"log": tensorboard_logs}
@@ -253,7 +255,7 @@ trainer = pytorch_lightning.Trainer(
     max_epochs=10,
     logger=tb_logger,
     enable_checkpointing=True,
-    num_sanity_val_steps=0,
+    num_sanity_val_steps=0, #zu Null gesetzt
     log_every_n_steps=1,
 )
 
