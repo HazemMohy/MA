@@ -240,8 +240,8 @@ def debug_data_loading(loader):
 # Training
 # initialise the LightningModule
 net = Net()
-debug_data_loading(train_dataloader)
-debug_data_loading(val_dataloader)
+debug_data_loading(train_loader)
+debug_data_loading(val_loader)
 
 # set up loggers and checkpoints
 
