@@ -232,11 +232,14 @@ def debug_data_loading(loader):
         print(f"Labels max: {data['label'].max()}, Labels min: {data['label'].min()}")
         if i == 0:  # Only print one batch for brevity
             break
+        
 
 
 # Training
 # initialise the LightningModule
 net = Net()
+debug_data_loading(train_dataloader)
+debug_data_loading(val_dataloader)
 
 # set up loggers and checkpoints
 
