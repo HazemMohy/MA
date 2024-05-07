@@ -228,8 +228,8 @@ class Net(pytorch_lightning.LightningModule):
             f"current mean dice: {mean_val_dice:.4f}"
             f"\nbest mean dice: {self.best_val_dice:.4f} "
             f"at epoch: {self.best_val_epoch}"
-            #f"at epoch: {self.val_loss}" #added validation loss zu printen
-            #f"\nValidation loss: {mean_val_loss}"  # Correctly use the calculated mean_val_loss
+            f"at epoch: {val_loss}" #added validation loss zu printen
+            f"\nValidation loss: {mean_val_loss}"  # Correctly use the calculated mean_val_loss
             
         )
         self.validation_step_outputs.clear()  # free memory
