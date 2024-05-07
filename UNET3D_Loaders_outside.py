@@ -249,7 +249,7 @@ def val_dataloader(val_ds): #net.val_ds instead of self. Nope, I will initialize
 
 # initialise the LightningModule
 net = Net()
-##net.prepare_data()  # Ensure datasets are prepared and assigned to net.train_ds and net.val_ds
+net.prepare_data()  # Ensure datasets are prepared and assigned to net.train_ds and net.val_ds
 
 # Create the dataloaders using datasets prepared in net
 train_loader = train_dataloader(net.train_ds)
