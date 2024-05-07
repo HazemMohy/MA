@@ -252,6 +252,13 @@ def val_dataloader(val_ds): #net.val_ds instead of self. Nope, I will initialize
 net = Net()
 net.prepare_data()  # Ensure datasets are prepared and assigned to net.train_ds and net.val_ds
 
+# Calling each and every function in the Net-Class
+net.forward()
+net.configure_optimizers()
+net.training_step()
+net.validation_step()
+net.on_validation_epoch_end()
+
 # Create the dataloaders using datasets prepared in net
 train_loader = train_dataloader(net.train_ds)
 val_loader = val_dataloader(net.val_ds)
