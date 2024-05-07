@@ -63,10 +63,11 @@ class Net(pytorch_lightning.LightningModule):
             norm=Norm.BATCH,
         )#.to(device) #device added
         #########
-        self.loss_function = DiceLoss(to_onehot_y=False, softmax=True)
+        #self.loss_function = DiceLoss(to_onehot_y=False, softmax=True)
+        self.loss_function = DiceLoss(softmax=True)
         #self.loss_function = bce(to_onehot_y=False, sigmoid=True) #switched from the softmax function to the sigmoid one
         #self.loss_function = bce(to_onehot_y=False, sigmoid=True) #switched from the softmax function to the sigmoid one
-        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True, to_onehot=False)]) #to_onehot?
+        self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True)]) #to_onehot?
         self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=False)]) #to_onehot?
         self.dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background
 
