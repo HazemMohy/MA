@@ -81,7 +81,7 @@ class Net(pytorch_lightning.LightningModule):
         self.validation_step_outputs = []
         self.train_ds = 0
         self.val_ds = 0
-        prepare_data()
+        #prepare_data()
 
     def forward(self, x):
         return self._model(x)
