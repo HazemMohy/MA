@@ -79,6 +79,9 @@ class Net(pytorch_lightning.LightningModule):
         self.best_val_dice = 0
         self.best_val_epoch = 0
         self.validation_step_outputs = []
+        self.train_ds = 0
+        self.val_ds = 0
+        prepare_data()
 
     def forward(self, x):
         return self._model(x)
@@ -140,7 +143,7 @@ class Net(pytorch_lightning.LightningModule):
             ])
 
         # we use cached datasets - these are 10x faster than regular datasets but succeptible to RAM overflow
-        '''
+        
         self.train_ds = CacheDataset(
             data=train_files,
             transform=train_transforms,
@@ -153,7 +156,7 @@ class Net(pytorch_lightning.LightningModule):
             cache_rate=1.0,
             num_workers=4,
         )
-        '''
+        
 
     #   self.train_ds = monai.data.Dataset(
     #             data=train_files, transform=train_transforms)
@@ -239,19 +242,7 @@ class Net(pytorch_lightning.LightningModule):
 net = Net()
 net.prepare_data()  # Ensure datasets are prepared and assigned to net.train_ds and net.val_ds
 
-#defining train_ds and val_ds outside the class as well
-train_ds = CacheDataset(
-    data=train_files,
-    transform=train_transforms,
-    cache_rate=1.0,
-    num_workers=4,
-    )
-val_ds = CacheDataset(
-    data=val_files,
-    transform=val_transforms,
-    cache_rate=1.0,
-    num_workers=4,
-    )
+#defining train_ds and val_ds outside the class as well, not anymore!!!!!
 
 #get the loaders outside the class
 def train_dataloader(train_ds): #net.train_ds instead of self. Nope, I will initialize it seperately at the end!
@@ -271,8 +262,8 @@ def val_dataloader(val_ds): #net.val_ds instead of self. Nope, I will initialize
 
 
 # Create the dataloaders using datasets prepared in net
-train_loader = train_dataloader(train_ds)
-val_loader = val_dataloader(val_ds)
+train_loader = train_dataloader(net.train_ds)
+val_loader = val_dataloader(net.val_ds)
 
 
 # Debugging data loading
