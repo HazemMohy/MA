@@ -68,7 +68,7 @@ class Net(pytorch_lightning.LightningModule):
         #self.loss_function = bce(to_onehot_y=False, sigmoid=True) #switched from the softmax function to the sigmoid one
         #self.loss_function = bce(to_onehot_y=False, sigmoid=True) #switched from the softmax function to the sigmoid one
         self.post_pred = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(argmax=True)]) #to_onehot?
-        self.post_label = Compose([EnsureType("tensor", device="cpu"), AsDiscrete(to_onehot=False)]) #to_onehot?
+        self.post_label = Compose([EnsureType("tensor", device="cpu")]) #to_onehot?
         self.dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background
 
         #self.loss_function = DiceLoss(to_onehot_y=True, softmax=True)
@@ -200,9 +200,9 @@ class Net(pytorch_lightning.LightningModule):
         #sw_batch_size = 4
         #outputs = sliding_window_inference(images, roi_size, sw_batch_size, self.forward) #nur mit self.forward(), genau wie training_step!!!!
         outputs = self.forward(images)
-        loss = self.loss_function(outputs, labels)
+        loss = self.loss_function(outputs, labels) #outputs_and_labels_before_pred
         outputs = [self.post_pred(i) for i in decollate_batch(outputs)]
-        labels = [self.post_label(i) for i in decollate_batch(labels)]
+        labels = [self.post_label(i) for i in decollate_batch(labels)] #outputs_and_labels_after_pred_abspeichern_und_schauen_UND_in in the last epochs, not in the first ones!
         self.dice_metric(y_pred=outputs, y=labels)
         d = {"val_loss": loss, "val_number": len(outputs)}
         self.validation_step_outputs.append(d)
