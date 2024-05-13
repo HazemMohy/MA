@@ -56,14 +56,14 @@ print_config()
 #train_labels  = sorted(glob("//homes/lindholm/monai/data/nets20/labels/*.nii.gz"))
 
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" #work with 4x
-train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
 train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
+train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
 train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))
 ##################################
 
 data_dicts = [
     {"bg": bg, "raw": raw, "label": gt}
-    for bg, raw, gt in zip(train_raw, train_bg, train_gt)
+    for bg, raw, gt in zip(train_bg, train_raw, train_gt)
 ]
 
 print(data_dicts[0])
@@ -77,13 +77,15 @@ val_files = data_dicts[-2:] #total of my files = 5
 print("Create transformers")
 train_transforms = Compose(
     [
-        LoadImaged(keys=["pet", "ct", "label"]),
-        AddChanneld(keys=["pet", "ct", "label"]),
-        NormalizeIntensityd(keys="pet", nonzero=True), # Normalize intensity
-        NormalizeIntensityd(keys="ct", nonzero=True), # Normalize intensity
-        ConcatItemsd(keys=["pet", "ct"], name="image", dim=0),
-        CropForegroundd(keys=["image", "label"], source_key="image"),
-        RandCropByPosNegLabeld(
+        LoadImaged(keys=["bg", "raw", "label"]),
+        #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
+        AddChanneld(keys=["bg", "raw", "label"]),
+        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
+        NormalizeIntensityd(keys="bg", nonzero=True), # Normalize intensity
+        NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
+        ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
+        #CropForegroundd(keys=["image", "label"], source_key="image"),
+        '''RandCropByPosNegLabeld(
             keys=["image", "label"],
             label_key="label",
             spatial_size=(256,256,256),
@@ -92,16 +94,16 @@ train_transforms = Compose(
             num_samples=3,
             image_key="image",
             image_threshold=0,
-        ),
+        ),'''
         
-        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0), # Random flip image on axis
-        RandAffined(
+        #RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0), # Random flip image on axis
+        '''RandAffined(
             keys=['image', 'label'],
             mode=('bilinear', 'nearest'),
             prob=0.2,
             shear_range=(0, 0, 0.1),
             rotate_range=(0, 0, np.pi/16),
-            scale_range=(0.1, 0.1, 0.1)),
+            scale_range=(0.1, 0.1, 0.1)),'''
         ToTensord(keys=["image", "label"]),
     ]
 )

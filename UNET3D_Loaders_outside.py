@@ -123,6 +123,7 @@ class Net(pytorch_lightning.LightningModule):
                     keys='image',
                     func=lambda x: (x/x.max()).astype(np.float32) #to resolve the invalid values-issue (only 0's and 1's)
                 ),
+                ToTensord(keys=["image", "label"]),
             ])
         val_transforms = Compose(
             [
@@ -142,6 +143,7 @@ class Net(pytorch_lightning.LightningModule):
                     keys='image',
                     func=lambda x: (x/x.max()).astype(np.float32)
                 ),
+                ToTensord(keys=["image", "label"]),
             ])
 
         # we use cached datasets - these are 10x faster than regular datasets but succeptible to RAM overflow
