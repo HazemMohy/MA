@@ -49,12 +49,17 @@ import warnings
 warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 print_config()
 ##################################
+slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
 
-#root_dir = "//homes/lindholm/monai/data/nets20" 
-#CT_images = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0000.nii.gz"))
-#PET_images  = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0001.nii.gz"))
-#train_labels  = sorted(glob("//homes/lindholm/monai/data/nets20/labels/*.nii.gz"))
+my_models_dir = "/lustre/groups/iterm/Hazem/MA/models"
+os.makedirs(my_models_dir, exist_ok=True)
 
+my_plots_dir = "/lustre/groups/iterm/Hazem/MA/plots"
+os.makedirs(my_plots_dir, exist_ok=True)
+
+
+
+##################################
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" #work with 4x
 train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
 train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
@@ -85,7 +90,8 @@ train_transforms = Compose(
         NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
         ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
         #CropForegroundd(keys=["image", "label"], source_key="image"),
-        '''RandCropByPosNegLabeld(
+        '''
+        RandCropByPosNegLabeld(
             keys=["image", "label"],
             label_key="label",
             spatial_size=(256,256,256),
@@ -97,14 +103,16 @@ train_transforms = Compose(
         ),'''
         
         #RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0), # Random flip image on axis
-        '''RandAffined(
+        '''
+        RandAffined(
             keys=['image', 'label'],
             mode=('bilinear', 'nearest'),
             prob=0.2,
             shear_range=(0, 0, 0.1),
             rotate_range=(0, 0, np.pi/16),
             scale_range=(0.1, 0.1, 0.1)),'''
-        '''Lambdad(
+        '''
+        Lambdad(
                 keys='label', 
                 func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
                 ), # threshhold opration for the binray mask either 1 or 0
@@ -117,22 +125,31 @@ train_transforms = Compose(
 )
 val_transforms = Compose(
     [
-        LoadImaged(keys=["pet", "ct", "label"]),
-        AddChanneld(keys=["pet", "ct", "label"]),
-        NormalizeIntensityd(keys="pet", nonzero=True),
-        NormalizeIntensityd(keys="ct", nonzero=True),
-        ConcatItemsd(keys=["pet", "ct"], name="image",dim=0),
-        
+        LoadImaged(keys=["bg", "raw", "label"]),
+        #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
+        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
+        AddChanneld(keys=["bg", "raw", "label"]),
+        NormalizeIntensityd(keys="bg", nonzero=True),
+        NormalizeIntensityd(keys="raw", nonzero=True),
+        ConcatItemsd(keys=["bg", "raw"], name="image",dim=0),
+        '''
+        Lambdad(
+            keys='label', 
+            func=lambda x: (x >= 0.5).astype(np.float32)
+            ),
+        Lambdad(
+            keys='image',
+            func=lambda x: (x/x.max()).astype(np.float32)
+            ),'''
         ToTensord(keys=["image", "label"]),
     ]   
 )
-
-#adjust the transforms, BUT not much!!!
 ##################################
 
 print("Define dataset loaders")
 train_ds = Dataset(data=train_files, transform=train_transforms)
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=4) #set shuffle to False and inspect!
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) #set shuffle to False and inspect!
+
 val_ds = Dataset(data=val_files, transform=val_transforms)
 val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) #set shuffle to False and inspect!
 ##################################
@@ -142,7 +159,7 @@ val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) #set shuffle to Fal
 print("Create Model")
 device = torch.device("cuda:0")
 model = UNet(
-    dimensions=3,
+    spatial_dims=3,
     in_channels=2,
     out_channels=1,
     channels=(16, 32, 64, 128, 256),
@@ -152,14 +169,15 @@ model = UNet(
 ).to(device)
 ##################################
 print("Create Loss")
-squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!! GOOGLE!
-loss_function = DiceLoss(include_background=False, to_onehot_y=True, softmax=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter
+#squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!! GOOGLE!
+loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter
+#Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background. However, check it again!
 ##################################
 print("Optimizer")
-learning_rate = 1e-4
+learning_rate = 1e-5
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 scaler = torch.cuda.amp.GradScaler() #Scaled gradient
-#check scaler
+#The scaler dynamically adjusts these scales, ensuring that gradients are neither too small to cause underflow nor too large to cause overflow.
 ##################################
 print("Execute a typical PyTorch training process")
 max_epochs = 10 #only 10 as a test
@@ -168,11 +186,9 @@ best_metric = -1
 best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
-post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=2) # argmax turns values into discretes
-post_label = AsDiscrete(to_onehot=True, n_classes=2)
-#check all values!!!
-#check n_classes, that could be one of the main problems, see the documentation!!
-#post_pred and post_label must be thoroughly understood!!!! where are they used and why!!
+post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground
+post_label = AsDiscrete(to_onehot=True, n_classes=2) #argmax may be needed here as well
+#post_pred and post_label will now act as transforms!
 ##################################
 
 for epoch in range(max_epochs):
@@ -188,16 +204,16 @@ for epoch in range(max_epochs):
             batch_data["image"].to(device),
             batch_data["label"].to(device),
         )
-        optimizer.zero_grad() #check?!
+        optimizer.zero_grad() #Before you compute gradients for a new batch, you need to zero out the gradients from the previous batch. If you don't zero them out, gradients from different batches will accumulate, NOT desired!!
 
-        with torch.cuda.amp.autocast(): # (automated mixed precision) #check?!
+        with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
         scaler.scale(loss).backward() #check scaler?!
         scaler.step(optimizer)
         scaler.update()
         
-        epoch_loss += loss.item()
+        epoch_loss += loss.item() #accumulates the total loss over the epoch
         print(
             f"{step}/{len(train_ds) // train_loader.batch_size}, "
             f"train_loss: {loss.item():.4f}")
@@ -210,7 +226,7 @@ for epoch in range(max_epochs):
 
     if (epoch + 1) % val_interval == 0:
         model.eval()
-        with torch.no_grad():
+        with torch.no_grad(): #disabling gradient calculation
             metric_sum = 0.0
             metric_count = 0
             for val_data in val_loader:
@@ -218,10 +234,10 @@ for epoch in range(max_epochs):
                     val_data["image"].to(device),
                     val_data["label"].to(device),
                 )
-                roi_size = (256, 256,256) #chech?!
-                sw_batch_size = 4 #check?!
+                roi_size = (300,300,300) #adapt it to the dimensions of my data
+                sw_batch_size = 4 #number of slices or batches processed simultaneously in the sliding window inference.
                 
-                with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference
+                with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs
                     val_outputs = sliding_window_inference(
                         val_inputs, roi_size, sw_batch_size, model, overlap=0.25,
                     )
@@ -231,19 +247,19 @@ for epoch in range(max_epochs):
                 value = compute_meandice(
                     y_pred=val_outputs,
                     y=val_labels,
-                    include_background=False, #include_background shall be set to True!
+                    include_background=True, #include_background shall be set to True!
                 )
-                metric_count += len(value) #check?!
-                metric_sum += value.sum().item() #check?!
+                metric_count += len(value) #to compute the average later
+                metric_sum += value.sum().item() #sum of ALL DiceScores
                 
-            metric = metric_sum / metric_count
+            metric = metric_sum / metric_count #average DiceScore for the epoch
             metric_values.append(metric)
             if metric > best_metric:
                 best_metric = metric
                 best_metric_epoch = epoch + 1
-                torch.save(model.state_dict(), os.path.join(
-                    root_dir, "best_metric_model_unet.pth")) #to be changed!!
-                print("saved new best metric model")
+                best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}.pth")
+                torch.save(model.state_dict(), best_model_path)
+                print("Saved new best metric model at:", best_model_path)
             print(
                 f"current epoch: {epoch + 1} current mean dice: {metric:.10f}"
                 f"\nbest mean dice: {best_metric:.10f} "
@@ -268,15 +284,16 @@ for epoch in range(max_epochs):
         y = metric_values
         plt.xlabel("epoch")
         plt.plot(x, y)
-        
-        plt.show()
-        fname = "//homes/lindholm/monai/data/nets20/metrics_unet.png" #to be changed
+
+        fname = os.path.join(my_plots_dir, f"metrics_unet_{slurm_job_id}.png")
         plt.savefig(fname, dpi=300, facecolor='w', edgecolor='w',
-                    format='png', transparent=False, pad_inches=0.1,
-        )
-    
-        torch.save(model.state_dict(), os.path.join(
-                    root_dir, "latest_metric_model_unet.pth")) #to be changed
+                format='png', transparent=False, pad_inches=0.1)
+        plt.show()
+        print(f"Plot saved to {fname}")
+        
+        latest_model_path = os.path.join(my_models_dir, f"latest_metric_model_unet_{slurm_job_id}.pth")
+        torch.save(model.state_dict(), latest_model_path)
+        print(f"Saved the latest model state to {latest_model_path}")
 
 
 print(
