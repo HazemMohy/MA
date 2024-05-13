@@ -26,7 +26,7 @@ from monai.transforms import (
     )
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
-from monai.metrics import DiceMetric, compute_meandice #compute_meandice can NOT be found!!
+from monai.metrics import DiceMetric #compute_meandice can NOT be found!!
 from monai.losses import DiceLoss, TverskyLoss, DiceCELoss
 from monai.inferers import sliding_window_inference
 from monai.data import SmartCacheDataset, CacheDataset, DataLoader, Dataset
