@@ -171,7 +171,7 @@ post_label = AsDiscrete(to_onehot=True, n_classes=2)
 #check all values!!!
 #check n_classes, that could be one of the main problems, see the documentation!!
 #post_pred and post_label must be thoroughly understood!!!! where are they used and why!!
-
+##################################
 
 for epoch in range(max_epochs):
     print("-" * 10)
