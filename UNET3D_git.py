@@ -65,7 +65,7 @@ train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2]
 train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))[:2]
 train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))[:2]
 ##################################
-print(os.path.join(data_dir, 'bg', "*.nii.gz")
+print(os.path.join(data_dir, 'bg', "*.nii.gz"))
 #print(glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
 print(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
 print(train_bg[0])
