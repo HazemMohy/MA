@@ -60,9 +60,9 @@ os.makedirs(my_plots_dir, exist_ok=True)
 
 ##################################
 data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" #work with 4x
-train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg'), "*.nii.gz")))[:2]
-train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw'), "*.nii.gz")))[:2]
-train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt'), "*.nii.gz")))[:2]
+train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg'), "*.nii.gz"))[:2]
+train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw'), "*.nii.gz"))[:2]
+train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt'), "*.nii.gz"))[:2]
 ##################################
 print(train_bg[0])
 
