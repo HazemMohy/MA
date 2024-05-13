@@ -104,6 +104,14 @@ train_transforms = Compose(
             shear_range=(0, 0, 0.1),
             rotate_range=(0, 0, np.pi/16),
             scale_range=(0.1, 0.1, 0.1)),'''
+        '''Lambdad(
+                keys='label', 
+                func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
+                ), # threshhold opration for the binray mask either 1 or 0
+        Lambdad(
+                keys='image',
+                func=lambda x: (x/x.max()).astype(np.float32) #to resolve the invalid values-issue (only 0's and 1's)
+                ),'''
         ToTensord(keys=["image", "label"]),
     ]
 )
