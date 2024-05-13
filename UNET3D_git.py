@@ -46,7 +46,7 @@ import glob
 
 import warnings
 warnings.filterwarnings("ignore")  # remove some scikit-image warnings
-print_config()
+#print_config()
 ##################################
 slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
 
@@ -59,16 +59,22 @@ os.makedirs(my_plots_dir, exist_ok=True)
 
 
 ##################################
-data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" #work with 4x
+#data_dir = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" # work with 4x
+#data_dir = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x/"
+data_dir = "/lustre/groups/iterm/Hazem/MA/data/2x"
+
 
 train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2]
 train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))[:2]
 train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))[:2]
-##################################
+
+
 print(os.path.join(data_dir, 'bg', "*.nii.gz"))
-#print(glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
-print(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
-print(train_bg[0])
+print(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz"))) #if this prints an empty list ([]), then the issue is definitely with the path or file presence.
+if train_bg:
+    print(train_bg[0])
+else:
+    print("No .nii.gz files found in the specified directory.")
 
 
 data_dicts = [
