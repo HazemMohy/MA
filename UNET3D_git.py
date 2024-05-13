@@ -161,7 +161,7 @@ device = torch.device("cuda:0")
 model = UNet(
     spatial_dims=3,
     in_channels=2,
-    out_channels=1,
+    out_channels=1, #try it with 2
     channels=(16, 32, 64, 128, 256),
     strides=(2, 2, 2, 2),
     num_res_units=2,
@@ -170,7 +170,8 @@ model = UNet(
 ##################################
 print("Create Loss")
 #squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!! GOOGLE!
-loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter
+loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter #try softmax again
+#loss_function = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #try DiceMetric instead of DiceLoss or Nah!
 #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background. However, check it again!
 ##################################
 print("Optimizer")
@@ -186,8 +187,9 @@ best_metric = -1
 best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
-post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground
-post_label = AsDiscrete(to_onehot=True, n_classes=2) #argmax may be needed here as well
+post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #try to_onehot=2
+#post_pred = Compose([Activations(sigmoid=True), AsDiscrete(argmax=True, to_onehot=True, n_classes=2)]) #try this!!
+post_label = AsDiscrete(to_onehot=True, n_classes=2) #argmax may be needed here as well #try to_onehot=2
 #post_pred and post_label will now act as transforms!
 ##################################
 
@@ -247,8 +249,10 @@ for epoch in range(max_epochs):
                 value = compute_meandice(
                     y_pred=val_outputs,
                     y=val_labels,
-                    include_background=True, #include_background shall be set to True!
+                    include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
                 )
+                #value = DiceMetric(include_background=True, reduction="mean") # For validation #try dice_metric instead of compute_meandice for validation
+                #value = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) # For validation #try dice_metric instead of compute_meandice for validation
                 metric_count += len(value) #to compute the average later
                 metric_sum += value.sum().item() #sum of ALL DiceScores
                 
