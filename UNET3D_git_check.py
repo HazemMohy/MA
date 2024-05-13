@@ -129,6 +129,7 @@ model = UNet(
 
 squared_pred=True, reduction='mean', batch=False)
 loss_function = DiceLoss(include_background=False, to_onehot_y=True, softmax=True)
+#here is sth. wrong!!
 
 learning_rate = 1e-4
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)

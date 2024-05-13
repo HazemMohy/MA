@@ -64,10 +64,11 @@ data_dict = [
     {"pet": PET_images, "ct": CT_images, "label": label_name}
     for PET_images, CT_images, label_name in zip(PET_images, CT_images, train_labels)
 ]
-#data_dicts = [
-            #{"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
-        #]
-
+'''
+data_dicts = [
+            {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
+        ]
+'''
 
 print(data_dict[0])
 
@@ -145,7 +146,7 @@ model = UNet(
 ).to(device)
 
 print("Create Loss")
-squared_pred=True, reduction='mean', batch=False)
+squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!!
 loss_function = DiceLoss(include_background=False, to_onehot_y=True, softmax=True)
 
 print("Optimizer")
@@ -164,6 +165,7 @@ metric_values = []
 post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=2) # argmax turns values into discretes
 post_label = AsDiscrete(to_onehot=True, n_classes=2)
 #check all values!!!
+#check n_classes, that could be one of the main problems, see the documentation!!
 
 
 for epoch in range(max_epochs):
