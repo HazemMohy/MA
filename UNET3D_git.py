@@ -26,7 +26,7 @@ from monai.transforms import (
     )
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
-from monai.metrics import compute_meandice
+from monai.metrics import DiceMetric, compute_meandice #compute_meandice can NOT be found!!
 from monai.losses import DiceLoss, TverskyLoss, DiceCELoss
 from monai.inferers import sliding_window_inference
 from monai.data import SmartCacheDataset, CacheDataset, DataLoader, Dataset
@@ -246,7 +246,7 @@ for epoch in range(max_epochs):
 
                 val_outputs = post_pred(val_outputs) #clarify post_pred
                 val_labels = post_label(val_labels) #clarify post_label
-                value = compute_meandice(
+                value = DiceMetric(
                     y_pred=val_outputs,
                     y=val_labels,
                     include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
