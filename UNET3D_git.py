@@ -90,36 +90,36 @@ train_transforms = Compose(
         NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
         ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
         #CropForegroundd(keys=["image", "label"], source_key="image"),
-        '''
-        RandCropByPosNegLabeld(
-            keys=["image", "label"],
-            label_key="label",
-            spatial_size=(256,256,256),
-            pos=5, # I 1 ud af 1+1 vil crop have en label voxel som centrum
-            neg=1,
-            num_samples=3,
-            image_key="image",
-            image_threshold=0,
-        ),'''
+        
+        #RandCropByPosNegLabeld(
+        #   keys=["image", "label"],
+        #    label_key="label",
+        #    spatial_size=(256,256,256),
+        #    pos=5, # I 1 ud af 1+1 vil crop have en label voxel som centrum
+        #    neg=1,
+        #    num_samples=3,
+        #    image_key="image",
+        #    image_threshold=0,
+        #),
         
         #RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0), # Random flip image on axis
-        '''
-        RandAffined(
-            keys=['image', 'label'],
-            mode=('bilinear', 'nearest'),
-            prob=0.2,
-            shear_range=(0, 0, 0.1),
-            rotate_range=(0, 0, np.pi/16),
-            scale_range=(0.1, 0.1, 0.1)),'''
-        '''
-        Lambdad(
-                keys='label', 
-                func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
-                ), # threshhold opration for the binray mask either 1 or 0
-        Lambdad(
-                keys='image',
-                func=lambda x: (x/x.max()).astype(np.float32) #to resolve the invalid values-issue (only 0's and 1's)
-                ),'''
+        
+        #RandAffined(
+        #   keys=['image', 'label'],
+        #   mode=('bilinear', 'nearest'),
+        #    prob=0.2,
+        #    shear_range=(0, 0, 0.1),
+        #    rotate_range=(0, 0, np.pi/16),
+        #    scale_range=(0.1, 0.1, 0.1)),'''
+        
+        #Lambdad(
+        #        keys='label', 
+        #        func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
+        #        ), # threshhold opration for the binray mask either 1 or 0
+        #Lambdad(
+        #        keys='image',
+        #        func=lambda x: (x/x.max()).astype(np.float32) #to resolve the invalid values-issue (only 0's and 1's)
+        #        ),'''
         ToTensord(keys=["image", "label"]),
     ]
 )
@@ -132,15 +132,15 @@ val_transforms = Compose(
         NormalizeIntensityd(keys="bg", nonzero=True),
         NormalizeIntensityd(keys="raw", nonzero=True),
         ConcatItemsd(keys=["bg", "raw"], name="image",dim=0),
-        '''
-        Lambdad(
-            keys='label', 
-            func=lambda x: (x >= 0.5).astype(np.float32)
-            ),
-        Lambdad(
-            keys='image',
-            func=lambda x: (x/x.max()).astype(np.float32)
-            ),'''
+        
+        #Lambdad(
+        #    keys='label', 
+        #    func=lambda x: (x >= 0.5).astype(np.float32)
+        #    ),
+        #Lambdad(
+        #    keys='image',
+        #    func=lambda x: (x/x.max()).astype(np.float32)
+        #    ),'''
         ToTensord(keys=["image", "label"]),
     ]   
 )
