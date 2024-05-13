@@ -50,38 +50,30 @@ warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 print_config()
 ##################################
 
-root_dir = "//homes/lindholm/monai/data/nets20" 
-CT_images = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0000.nii.gz"))
-PET_images  = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0001.nii.gz"))
-train_labels  = sorted(glob("//homes/lindholm/monai/data/nets20/labels/*.nii.gz"))
-#data_dir= "/lustre/groups/iterm/Hazem/MA/data/2x"
-#train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
-#train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
-#train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))
-#change the directories style, adapt to the other one!
-#work with 4x
+#root_dir = "//homes/lindholm/monai/data/nets20" 
+#CT_images = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0000.nii.gz"))
+#PET_images  = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0001.nii.gz"))
+#train_labels  = sorted(glob("//homes/lindholm/monai/data/nets20/labels/*.nii.gz"))
+
+data_dir= "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" #work with 4x
+train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
+train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
+train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))
 ##################################
 
-
-data_dict = [
-    {"pet": PET_images, "ct": CT_images, "label": label_name}
-    for PET_images, CT_images, label_name in zip(PET_images, CT_images, train_labels)
-]
-'''
 data_dicts = [
-            {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
-        ]
-'''
-#adapt to the other style!
-print(data_dict[0])
+    {"bg": bg, "raw": raw, "label": gt}
+    for bg, raw, gt in zip(train_raw, train_bg, train_gt)
+]
+
+print(data_dicts[0])
 ##################################
 
-train_files = data_dict[:-9]
-val_files = data_dict[-9:]
-#train_files, val_files = data_dicts[:-2], data_dicts[-2:] #total of my files = 5
+train_files = data_dicts[:-2]
+val_files = data_dicts[-2:] #total of my files = 5
 ##################################
 
-'''
+
 print("Create transformers")
 train_transforms = Compose(
     [
@@ -124,7 +116,7 @@ val_transforms = Compose(
         ToTensord(keys=["image", "label"]),
     ]   
 )
-'''
+
 #adjust the transforms, BUT not much!!!
 ##################################
 
