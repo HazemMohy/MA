@@ -96,7 +96,7 @@ class Net(pytorch_lightning.LightningModule):
 
         # create a dictionary for image and label correspondance
         data_dicts = [
-            {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
+            {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_bg, train_raw, train_gt)
         ]
         # training files are all the Voxels but the last 2, the validation files are the last two .nii files
         train_files, val_files = data_dicts[:-2], data_dicts[-2:] #total of my files = 5
