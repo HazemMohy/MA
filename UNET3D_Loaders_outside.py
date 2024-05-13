@@ -9,7 +9,8 @@ from monai.transforms import (
     NormalizeIntensityd,
     Lambdad,
     ConcatItemsd,
-    SpatialPadd
+    SpatialPadd,
+    ToTensord,
 )
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
