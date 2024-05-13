@@ -42,7 +42,6 @@ import tempfile
 import shutil
 import os
 import glob
-from glob import glob
 ##################################
 
 import warnings
