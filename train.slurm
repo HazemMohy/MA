@@ -18,4 +18,5 @@ eval "$(conda shell.bash hook)"
 conda activate Masterarbeit
 echo "env activated"
 
-srun python -u  --job $SLURM_JOB_ID
+
+srun python -u UNET3D_git.py --job $SLURM_JOB_ID
