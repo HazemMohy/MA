@@ -250,7 +250,7 @@ net.prepare_data()  # Ensure datasets are prepared and assigned to net.train_ds 
 def train_dataloader(train_ds): #net.train_ds instead of self. Nope, I will initialize it seperately at the end!
     train_loader = DataLoader(
         train_ds,
-        batch_size=1, #increased to 4
+        batch_size=4, #increased to 4
         shuffle=False,
         num_workers=4,
         collate_fn=list_data_collate,
@@ -293,7 +293,7 @@ tb_logger = pytorch_lightning.loggers.TensorBoardLogger(save_dir=log_dir)
 # initialise Lightning's trainer.
 trainer = pytorch_lightning.Trainer(
     devices=[0],
-    max_epochs=10,
+    max_epochs=7,
     logger=tb_logger,
     enable_checkpointing=True,
     num_sanity_val_steps=0, #zu Null gesetzt
