@@ -1,5 +1,5 @@
 print("START!")
-
+##################################
 
 import numpy as np
 from monai.utils import first, set_determinism
@@ -34,7 +34,7 @@ from monai.config import print_config
 from monai.apps import download_and_extract
 from monai.optimizers import Novograd
 import torch
-torch.multiprocessing.set_sharing_strategy('file_system')
+torch.multiprocessing.set_sharing_strategy('file_system') #????????????
 import sys
 import matplotlib
 import matplotlib.pyplot as plt
@@ -43,12 +43,12 @@ import shutil
 import os
 import glob
 from glob import glob
-
+##################################
 
 import warnings
 warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 print_config()
-
+##################################
 
 root_dir = "//homes/lindholm/monai/data/nets20" 
 CT_images = sorted(glob("//homes/lindholm/monai/data/nets20/images/*0000.nii.gz"))
@@ -58,6 +58,9 @@ train_labels  = sorted(glob("//homes/lindholm/monai/data/nets20/labels/*.nii.gz"
 #train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
 #train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
 #train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))
+#change the directories style, adapt to the other one!
+#work with 4x
+##################################
 
 
 data_dict = [
@@ -69,14 +72,14 @@ data_dicts = [
             {"bg": bg, "raw": raw, "label": gt} for bg, raw, gt in zip(train_raw, train_bg, train_gt)
         ]
 '''
-
+#adapt to the other style!
 print(data_dict[0])
-
+##################################
 
 train_files = data_dict[:-9]
 val_files = data_dict[-9:]
 #train_files, val_files = data_dicts[:-2], data_dicts[-2:] #total of my files = 5
-
+##################################
 
 '''
 print("Create transformers")
@@ -123,17 +126,18 @@ val_transforms = Compose(
 )
 '''
 #adjust the transforms, BUT not much!!!
-
+##################################
 
 print("Define dataset loaders")
 train_ds = Dataset(data=train_files, transform=train_transforms)
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=4)
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=4) #set shuffle to False and inspect!
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) #set shuffle to False and inspect!
+##################################
 
 
-print("Create Model")
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer
+print("Create Model")
 device = torch.device("cuda:0")
 model = UNet(
     dimensions=3,
@@ -144,20 +148,20 @@ model = UNet(
     num_res_units=2,
     norm=Norm.BATCH,
 ).to(device)
-
+##################################
 print("Create Loss")
-squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!!
-loss_function = DiceLoss(include_background=False, to_onehot_y=True, softmax=True)
-
+squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!! GOOGLE!
+loss_function = DiceLoss(include_background=False, to_onehot_y=True, softmax=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter
+##################################
 print("Optimizer")
 learning_rate = 1e-4
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 scaler = torch.cuda.amp.GradScaler() #Scaled gradient
 #check scaler
-
+##################################
 print("Execute a typical PyTorch training process")
-max_epochs = 10000
-val_interval = 2
+max_epochs = 10 #only 10 as a test
+val_interval = 1 #from 2 to 1
 best_metric = -1
 best_metric_epoch = -1
 epoch_loss_values = []
@@ -166,6 +170,7 @@ post_pred = AsDiscrete(argmax=True, to_onehot=True, n_classes=2) # argmax turns 
 post_label = AsDiscrete(to_onehot=True, n_classes=2)
 #check all values!!!
 #check n_classes, that could be one of the main problems, see the documentation!!
+#post_pred and post_label must be thoroughly understood!!!! where are they used and why!!
 
 
 for epoch in range(max_epochs):
