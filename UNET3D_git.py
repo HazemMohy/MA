@@ -186,12 +186,12 @@ for epoch in range(max_epochs):
             batch_data["image"].to(device),
             batch_data["label"].to(device),
         )
-        optimizer.zero_grad()
+        optimizer.zero_grad() #check?!
 
-        with torch.cuda.amp.autocast(): # (automated mixed precision)
+        with torch.cuda.amp.autocast(): # (automated mixed precision) #check?!
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
-        scaler.scale(loss).backward()
+        scaler.scale(loss).backward() #check scaler?!
         scaler.step(optimizer)
         scaler.update()
         
@@ -216,23 +216,23 @@ for epoch in range(max_epochs):
                     val_data["image"].to(device),
                     val_data["label"].to(device),
                 )
-                roi_size = (256, 256,256)
-                sw_batch_size = 4
+                roi_size = (256, 256,256) #chech?!
+                sw_batch_size = 4 #check?!
                 
-                with torch.cuda.amp.autocast():
+                with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference
                     val_outputs = sliding_window_inference(
                         val_inputs, roi_size, sw_batch_size, model, overlap=0.25,
                     )
 
-                val_outputs = post_pred(val_outputs)
-                val_labels = post_label(val_labels)
+                val_outputs = post_pred(val_outputs) #clarify post_pred
+                val_labels = post_label(val_labels) #clarify post_label
                 value = compute_meandice(
                     y_pred=val_outputs,
                     y=val_labels,
-                    include_background=False,
+                    include_background=False, #include_background shall be set to True!
                 )
-                metric_count += len(value)
-                metric_sum += value.sum().item()
+                metric_count += len(value) #check?!
+                metric_sum += value.sum().item() #check?!
                 
             metric = metric_sum / metric_count
             metric_values.append(metric)
@@ -240,7 +240,7 @@ for epoch in range(max_epochs):
                 best_metric = metric
                 best_metric_epoch = epoch + 1
                 torch.save(model.state_dict(), os.path.join(
-                    root_dir, "best_metric_model_unet.pth"))
+                    root_dir, "best_metric_model_unet.pth")) #to be changed!!
                 print("saved new best metric model")
             print(
                 f"current epoch: {epoch + 1} current mean dice: {metric:.10f}"
@@ -249,7 +249,7 @@ for epoch in range(max_epochs):
             )
 
 
-    if (epoch + 1) % 3 == 0:
+    if (epoch + 1) % 1 == 0: # from %3 to %1, to see more!
         print("Plot the loss and metric")
         
         plt.figure("train", (12, 6))
@@ -268,13 +268,13 @@ for epoch in range(max_epochs):
         plt.plot(x, y)
         
         plt.show()
-        fname = "//homes/lindholm/monai/data/nets20/metrics_unet.png"
+        fname = "//homes/lindholm/monai/data/nets20/metrics_unet.png" #to be changed
         plt.savefig(fname, dpi=300, facecolor='w', edgecolor='w',
                     format='png', transparent=False, pad_inches=0.1,
         )
     
         torch.save(model.state_dict(), os.path.join(
-                    root_dir, "latest_metric_model_unet.pth"))
+                    root_dir, "latest_metric_model_unet.pth")) #to be changed
 
 
 print(
