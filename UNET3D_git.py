@@ -185,7 +185,7 @@ loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True
 #loss_function = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #try DiceMetric instead of DiceLoss or Nah!
 #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background. However, check it again!
 ##################################
-print("Create Optimizer")
+print("Create Optimizer ")
 learning_rate = 1e-5
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 scaler = torch.cuda.amp.GradScaler() #Scaled gradient
