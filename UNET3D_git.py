@@ -93,6 +93,8 @@ val_files = data_dicts[-1:] #total of my files = 5 (2)
 def print_shape(x):
     print(f"Shape of {x.keys()}: {x['image'].shape}, {x['label'].shape}")
     return x
+
+dice_metric = DiceMetric(include_background=True, reduction="mean")
 ##################################
 
 print("Create transforms")
@@ -271,11 +273,12 @@ for epoch in range(max_epochs):
 
                 val_outputs = post_pred(val_outputs) #clarify post_pred
                 val_labels = post_label(val_labels) #clarify post_label
-                value = DiceMetric(
-                    y_pred=val_outputs,
-                    y=val_labels,
-                    include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
-                )
+                #value = DiceMetric(
+                    #y_pred=val_outputs,
+                    #y=val_labels,
+                    #include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
+                #)
+                value = dice_metric(y_pred=val_outputs, y=val_labels)
                 #value = DiceMetric(include_background=True, reduction="mean") # For validation #try dice_metric instead of compute_meandice for validation
                 #value = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) # For validation #try dice_metric instead of compute_meandice for validation
                 metric_count += len(value) #to compute the average later
