@@ -24,6 +24,7 @@ from monai.transforms import (
     Rand2DElastic,
     RandAffined,
     SpatialPadd,
+    Lambda,
     )
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
@@ -89,7 +90,10 @@ print(data_dicts[0])
 train_files = data_dicts[:-1]
 val_files = data_dicts[-1:] #total of my files = 5 (2)
 ##################################
-
+def print_shape(x):
+    print(f"Shape of {x.keys()}: {x['image'].shape}, {x['label'].shape}")
+    return x
+##################################
 
 print("Create transforms")
 train_transforms = Compose(
@@ -97,10 +101,13 @@ train_transforms = Compose(
         LoadImaged(keys=["bg", "raw", "label"]),
         #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
         AddChanneld(keys=["bg", "raw", "label"]),
-        SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
+        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
+        #SpatialPadd(keys=["image", "label"], spatial_size=(160, 160, 160), mode='edge') #I do believe, that should be shifted downwards, after the ConcatItemsd-Transform
         NormalizeIntensityd(keys="bg", nonzero=True), # Normalize intensity
         NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
         ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
+        SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'),
+        Lambda(print_shape), #print the shape after padding
         #CropForegroundd(keys=["image", "label"], source_key="image"),
         
         #RandCropByPosNegLabeld(
