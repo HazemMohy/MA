@@ -271,6 +271,10 @@ for epoch in range(max_epochs):
                     #)
                     val_outputs = model(val_inputs)
 
+                    # Apply sigmoid activation and threshold to obtain binary outputs
+                    val_outputs = torch.sigmoid(val_outputs)  # Sigmoid to convert logits to probabilities
+                    val_outputs = (val_outputs > 0.5).float()  # Thresholding probabilities to binary values
+
                 val_outputs = post_pred(val_outputs) #clarify post_pred
                 val_labels = post_label(val_labels) #clarify post_label
                 #value = DiceMetric(
@@ -279,6 +283,14 @@ for epoch in range(max_epochs):
                     #include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
                 #)
                 #value = DiceMetric(include_background=True, reduction="mean")
+                to ensure data shapes and types match the expected:
+                print("Validation outputs shape:", val_outputs.shape)
+                print("Validation labels shape:", val_labels.shape)
+                print("Validation outputs unique values:", torch.unique(val_outputs))
+                print("Validation labels unique values:", torch.unique(val_labels))
+
+
+
                 dice_metric(y_pred=val_outputs, y=val_labels)
                 #value = DiceMetric(include_background=True, reduction="mean") # For validation #try dice_metric instead of compute_meandice for validation
                 #value = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) # For validation #try dice_metric instead of compute_meandice for validation
