@@ -94,7 +94,7 @@ def print_shape(x):
     print(f"Shape of {x.keys()}: {x['image'].shape}, {x['label'].shape}")
     return x
 
-#dice_metric = DiceMetric(include_background=True, reduction="mean")
+dice_metric = DiceMetric(include_background=True, reduction="mean")
 ##################################
 
 print("Create transforms")
@@ -278,13 +278,19 @@ for epoch in range(max_epochs):
                     #y=val_labels,
                     #include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
                 #)
-                value = DiceMetric(include_background=True, reduction="mean")
+                #value = DiceMetric(include_background=True, reduction="mean")
+                dice_metric(y_pred=val_outputs, y=val_labels)
                 #value = DiceMetric(include_background=True, reduction="mean") # For validation #try dice_metric instead of compute_meandice for validation
                 #value = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) # For validation #try dice_metric instead of compute_meandice for validation
-                metric_count += len(value) #to compute the average later
-                metric_sum += value.sum().item() #sum of ALL DiceScores
+                #metric_count += len(value) #to compute the average later
+                #metric_sum += value.sum().item() #sum of ALL DiceScores
                 
-            metric = metric_sum / metric_count #average DiceScore for the epoch
+            #metric = metric_sum / metric_count #average DiceScore for the epoch
+            #metric = value.aggregate().item()  # Get the average metric over all batches
+            #dice_metric.reset()  # Reset the metric computation for the next epoch
+            metric = dice_metric.aggregate().item()
+            dice_metric.reset()
+            
             metric_values.append(metric)
             if metric > best_metric:
                 best_metric = metric
