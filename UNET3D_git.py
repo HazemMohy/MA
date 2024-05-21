@@ -146,11 +146,13 @@ val_transforms = Compose(
     [
         LoadImaged(keys=["bg", "raw", "label"]),
         #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
-        SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
+        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
         AddChanneld(keys=["bg", "raw", "label"]),
         NormalizeIntensityd(keys="bg", nonzero=True),
         NormalizeIntensityd(keys="raw", nonzero=True),
         ConcatItemsd(keys=["bg", "raw"], name="image",dim=0),
+        SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'),
+        Lambda(print_shape), #print the shape after padding
         
         #Lambdad(
         #    keys='label', 
