@@ -200,9 +200,9 @@ best_metric = -1
 best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
-post_pred = AsDiscrete(argmax=True, to_onehot=n_classes, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #try to_onehot=2
+post_pred = AsDiscrete(argmax=True, to_onehot=2, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #try to_onehot=2
 #post_pred = Compose([Activations(sigmoid=True), AsDiscrete(argmax=True, to_onehot=True, n_classes=2)]) #try this!!
-post_label = AsDiscrete(to_onehot=n_classes, n_classes=2) #argmax may be needed here as well #try to_onehot=2
+post_label = AsDiscrete(to_onehot=2, n_classes=2) #argmax may be needed here as well #try to_onehot=2
 #post_pred and post_label will now act as transforms!
 ##################################
 
