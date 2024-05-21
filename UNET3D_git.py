@@ -274,7 +274,7 @@ for epoch in range(max_epochs):
                     # Apply sigmoid activation and threshold to obtain binary outputs
                     val_outputs = torch.sigmoid(val_outputs)  # Sigmoid to convert logits to probabilities
                     val_outputs = (val_outputs > 0.5).float()  # Thresholding probabilities to binary values
-                    val_labels[val_labels] > 0 = 1
+                    val_labels[val_labels > 0] = 1
 
                 #val_outputs = post_pred(val_outputs) #clarify post_pred
                 #val_labels = post_label(val_labels) #clarify post_label
