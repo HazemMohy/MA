@@ -283,7 +283,7 @@ for epoch in range(max_epochs):
                     #include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
                 #)
                 #value = DiceMetric(include_background=True, reduction="mean")
-                to ensure data shapes and types match the expected:
+                #to ensure data shapes and types match the expected:
                 print("Validation outputs shape:", val_outputs.shape)
                 print("Validation labels shape:", val_labels.shape)
                 print("Validation outputs unique values:", torch.unique(val_outputs))
