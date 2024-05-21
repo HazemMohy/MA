@@ -182,6 +182,8 @@ model = UNet(
 print("Create Loss")
 #squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!! GOOGLE!
 loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter #try softmax again
+#to_onehot_y == OneHotEncoding ?? ((OneHotEncoding = Turn all unique values into lists of 0's and 1's where the target value is 1 and the rest are 0's. For example, with car colors green, red and blue: a green car's color feature would be represented as [1,0,0] while a red one would be [0,1,0]))
+#OneHotEncoding is a type of feature encoding which is turning values within your dataset(even images) into numbers, bec. ML-model requires all values to be numerical
 #loss_function = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #try DiceMetric instead of DiceLoss or Nah!
 #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background. However, check it again!
 ##################################
