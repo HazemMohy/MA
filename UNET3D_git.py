@@ -220,6 +220,7 @@ for epoch in range(max_epochs):
             batch_data["image"].to(device),
             batch_data["label"].to(device),
         )
+        print(f"Input shape before model: {inputs.shape}")  #to check input size
         optimizer.zero_grad() #Before you compute gradients for a new batch, you need to zero out the gradients from the previous batch. If you don't zero them out, gradients from different batches will accumulate, NOT desired!!
 
         with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
