@@ -19,4 +19,8 @@ conda activate Masterarbeit
 echo "env activated"
 
 
+# Set CUDA_LAUNCH_BLOCKING to 1 for better error traceability
+export CUDA_LAUNCH_BLOCKING=1
+echo "CUDA_LAUNCH_BLOCKING set to 1"
+
 srun python -u UNET3D_git.py --job $SLURM_JOB_ID
