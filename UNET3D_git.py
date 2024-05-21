@@ -263,10 +263,11 @@ for epoch in range(max_epochs):
                 roi_size = (300,300,300) #adapt it to the dimensions of my data
                 sw_batch_size = 4 #number of slices or batches processed simultaneously in the sliding window inference.
                 
-                with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs
-                    val_outputs = sliding_window_inference(
-                        val_inputs, roi_size, sw_batch_size, model, overlap=0.25,
-                    )
+                with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
+                    #val_outputs = sliding_window_inference(
+                        #val_inputs, roi_size, sw_batch_size, model, overlap=0.25,
+                    #)
+                    val_outputs = model(val_inputs)
 
                 val_outputs = post_pred(val_outputs) #clarify post_pred
                 val_labels = post_label(val_labels) #clarify post_label
