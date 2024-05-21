@@ -96,7 +96,7 @@ train_transforms = Compose(
         LoadImaged(keys=["bg", "raw", "label"]),
         #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
         AddChanneld(keys=["bg", "raw", "label"]),
-        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
+        SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
         NormalizeIntensityd(keys="bg", nonzero=True), # Normalize intensity
         NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
         ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
@@ -138,7 +138,7 @@ val_transforms = Compose(
     [
         LoadImaged(keys=["bg", "raw", "label"]),
         #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
-        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
+        SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
         AddChanneld(keys=["bg", "raw", "label"]),
         NormalizeIntensityd(keys="bg", nonzero=True),
         NormalizeIntensityd(keys="raw", nonzero=True),
