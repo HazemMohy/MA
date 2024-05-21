@@ -23,6 +23,7 @@ from monai.transforms import (
     CropForegroundd,
     Rand2DElastic,
     RandAffined,
+    SpatialPadd,
     )
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
