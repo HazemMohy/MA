@@ -61,17 +61,19 @@ os.makedirs(my_plots_dir, exist_ok=True)
 
 
 ##################################
-#data_dir = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX- NeuromuscularJunctions/2x" # work with 4x
-#data_dir = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x/"
+#data_dir = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x/" #this one is causing some problems because of the spacings at the names, which is why I just copied the data to my folder and wrote
+#down a simple folder-name!
 data_dir = "/lustre/groups/iterm/Hazem/MA/data/2x"
 
 
+#train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2] #here I just used 2 patches of my data as a test so I shall not wait that long!
 train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2]
 train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))[:2]
 train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))[:2]
 
 
 print(os.path.join(data_dir, 'bg', "*.nii.gz"))
+
 print(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz"))) #if this prints an empty list ([]), then the issue is definitely with the path or file presence.
 if train_bg:
     print(train_bg[0])
@@ -87,13 +89,18 @@ data_dicts = [
 print(data_dicts[0])
 ##################################
 
+#these 2 lines here are what to be converted to the data splitting; and it shall be AUTOMATICALLY done!
 train_files = data_dicts[:-1]
-val_files = data_dicts[-1:] #total of my files = 5 (2)
+val_files = data_dicts[-1:] 
 ##################################
+#this function is a good check for my tensor dimensions, so that I do not have the dimensions-mismatch-ERROR!
 def print_shape(x):
     print(f"Shape of {x.keys()}: {x['image'].shape}, {x['label'].shape}")
     return x
 
+##################################
+#here am defining the dice_metric-class. It is NO MORE a function, it is a class, as MONAI-development team has structures many of their features!
+#So here the class is defined and assigned to a variable. Then down at the evaluation block, the parameters (= my parameters: inputs & outputs) must be then added to the assigned variable.
 dice_metric = DiceMetric(include_background=True, reduction="mean")
 ##################################
 
@@ -101,82 +108,41 @@ print("Create transforms")
 train_transforms = Compose(
     [
         LoadImaged(keys=["bg", "raw", "label"]),
-        #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
         AddChanneld(keys=["bg", "raw", "label"]),
-        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'), # added reflective padding #Padding: Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
-        #SpatialPadd(keys=["image", "label"], spatial_size=(160, 160, 160), mode='edge') #I do believe, that should be shifted downwards, after the ConcatItemsd-Transform
         NormalizeIntensityd(keys="bg", nonzero=True), # Normalize intensity
         NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
         ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
         SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'),
-        Lambda(print_shape), #print the shape after padding
-        #CropForegroundd(keys=["image", "label"], source_key="image"),
-        
-        #RandCropByPosNegLabeld(
-        #   keys=["image", "label"],
-        #    label_key="label",
-        #    spatial_size=(256,256,256),
-        #    pos=5, # I 1 ud af 1+1 vil crop have en label voxel som centrum
-        #    neg=1,
-        #    num_samples=3,
-        #    image_key="image",
-        #    image_threshold=0,
-        #),
-        
-        #RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0), # Random flip image on axis
-        
-        #RandAffined(
-        #   keys=['image', 'label'],
-        #   mode=('bilinear', 'nearest'),
-        #    prob=0.2,
-        #    shear_range=(0, 0, 0.1),
-        #    rotate_range=(0, 0, np.pi/16),
-        #    scale_range=(0.1, 0.1, 0.1)),'''
-        
-        #Lambdad(
-        #        keys='label', 
-        #        func=lambda x: (x >= 0.5).astype(np.float32) # nicht größer, sondern größer gleich!!!!
-        #        ), # threshhold opration for the binray mask either 1 or 0
-        #Lambdad(
-        #        keys='image',
-        #        func=lambda x: (x/x.max()).astype(np.float32) #to resolve the invalid values-issue (only 0's and 1's)
-        #        ),'''
+        Lambda(print_shape), #print the shape after padding as a CHECK for tensor dimensions, avoiding dimensions-mismatch!
         ToTensord(keys=["image", "label"]),
+        #added "reflective" padding. Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
+        #the order in the preprocessing is IMPORTANT! One of my mistakes was having the padding before the concatenating which caused errors! Another one, I beleive, is having the normalization BEFORE the concatentation!
+        #you can check other "useful" transfoms from the safe-copy, vor allem: EnsureChannelFirstd (check the comment as well), cropping-transforms, random-tranforms, lambda-transforms
+        #Same for evaluation transforms
     ]
 )
 val_transforms = Compose(
     [
         LoadImaged(keys=["bg", "raw", "label"]),
-        #EnsureChannelFirstd(keys=["raw","bg", "label"]), # (Channel_dim,X_dim,Y_dim,Z_dim): tensor size = torch.unsqueeze(0)
-        #SpatialPadd(keys=["raw","bg", "label"], spatial_size=(320, 320, 320), mode='reflect'),
         AddChanneld(keys=["bg", "raw", "label"]),
         NormalizeIntensityd(keys="bg", nonzero=True),
         NormalizeIntensityd(keys="raw", nonzero=True),
         ConcatItemsd(keys=["bg", "raw"], name="image",dim=0),
         SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'),
         Lambda(print_shape), #print the shape after padding
-        
-        #Lambdad(
-        #    keys='label', 
-        #    func=lambda x: (x >= 0.5).astype(np.float32)
-        #    ),
-        #Lambdad(
-        #    keys='image',
-        #    func=lambda x: (x/x.max()).astype(np.float32)
-        #    ),'''
         ToTensord(keys=["image", "label"]),
+        #NOT every transform in the training-preprocessing shall be put as well in the evaluation-preprocessing!
     ]   
 )
 ##################################
 
 print("Define dataset loaders")
 train_ds = Dataset(data=train_files, transform=train_transforms)
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) #set shuffle to False and inspect!
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) #set shuffle to True/False and inspect!
 
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) #set shuffle to False and inspect!
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) #set shuffle to True/False and inspect!
 ##################################
-
 
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer
 print("Create Model")
@@ -192,12 +158,11 @@ model = UNet(
 ).to(device)
 ##################################
 print("Create Loss")
-#squared_pred=True, reduction='mean', batch=False) #here is sth. wrong!! GOOGLE!
 loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter #try softmax again
+#Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background.
 #to_onehot_y == OneHotEncoding ?? ((OneHotEncoding = Turn all unique values into lists of 0's and 1's where the target value is 1 and the rest are 0's. For example, with car colors green, red and blue: a green car's color feature would be represented as [1,0,0] while a red one would be [0,1,0]))
 #OneHotEncoding is a type of feature encoding which is turning values within your dataset(even images) into numbers, bec. ML-model requires all values to be numerical
-#loss_function = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) #try DiceMetric instead of DiceLoss or Nah!
-#Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background. However, check it again!
+#You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
 ##################################
 print("Create Optimizer ")
 learning_rate = 1e-5
@@ -212,10 +177,9 @@ best_metric = -1
 best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
-post_pred = AsDiscrete(argmax=True, to_onehot=2, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #try to_onehot=2
-#post_pred = Compose([Activations(sigmoid=True), AsDiscrete(argmax=True, to_onehot=True, n_classes=2)]) #try this!!
-post_label = AsDiscrete(to_onehot=2, n_classes=2) #argmax may be needed here as well #try to_onehot=2
-#post_pred and post_label will now act as transforms!
+post_pred = AsDiscrete(argmax=True, to_onehot=2, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #to_onehot=n_classes
+post_label = AsDiscrete(to_onehot=2, n_classes=2) 
+#both post_pred and post_label are eliminated = NOT used!!
 ##################################
 
 for epoch in range(max_epochs):
@@ -266,24 +230,15 @@ for epoch in range(max_epochs):
                 sw_batch_size = 4 #number of slices or batches processed simultaneously in the sliding window inference.
                 
                 with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
-                    #val_outputs = sliding_window_inference(
-                        #val_inputs, roi_size, sw_batch_size, model, overlap=0.25,
-                    #)
                     val_outputs = model(val_inputs)
 
                     # Apply sigmoid activation and threshold to obtain binary outputs
                     val_outputs = torch.sigmoid(val_outputs)  # Sigmoid to convert logits to probabilities
                     val_outputs = (val_outputs > 0.5).float()  # Thresholding probabilities to binary values
+                    #I think I need here to visualize my outputs as a CHECK, before and after!
                     val_labels[val_labels > 0] = 1
 
-                #val_outputs = post_pred(val_outputs) #clarify post_pred
-                #val_labels = post_label(val_labels) #clarify post_label
-                #value = DiceMetric(
-                    #y_pred=val_outputs,
-                    #y=val_labels,
-                    #include_background=True, #include_background shall be set to True! #try dice_metric instead of compute_meandice for validation
-                #)
-                #value = DiceMetric(include_background=True, reduction="mean")
+    
                 #to ensure data shapes and types match the expected:
                 print("Validation outputs shape:", val_outputs.shape)
                 print("Validation labels shape:", val_labels.shape)
@@ -293,16 +248,12 @@ for epoch in range(max_epochs):
 
 
                 dice_metric(y_pred=val_outputs, y=val_labels)
-                #value = DiceMetric(include_background=True, reduction="mean") # For validation #try dice_metric instead of compute_meandice for validation
-                #value = DiceMetric(include_background=True, reduction="mean", get_not_nans=False) # For validation #try dice_metric instead of compute_meandice for validation
-                #metric_count += len(value) #to compute the average later
-                #metric_sum += value.sum().item() #sum of ALL DiceScores
                 
-            #metric = metric_sum / metric_count #average DiceScore for the epoch
-            #metric = value.aggregate().item()  # Get the average metric over all batches
-            #dice_metric.reset()  # Reset the metric computation for the next epoch
-            metric = dice_metric.aggregate().item()
-            dice_metric.reset()
+                
+            
+            
+            metric = dice_metric.aggregate().item() #this line is giving us the average DiceScore for the epoch without having to manually add the individual scores then dividing them by the length/Abzahl of the whole
+            dice_metric.reset() # Reset the metric computation for the next epoch
             
             metric_values.append(metric)
             if metric > best_metric:
@@ -350,5 +301,3 @@ for epoch in range(max_epochs):
 print(
     f"train completed, best_metric: {best_metric:.4f} "
     f"at epoch: {best_metric_epoch}") 
-
-
