@@ -243,6 +243,8 @@ val_transforms = Compose(
         #NOT every transform in the training-preprocessing shall be put as well in the evaluation-preprocessing!
     ]   
 )
+
+test_transforms = val_transforms  # Use the same transforms for validation and testing
 ##################################
 
 print("Define dataset loaders")
@@ -260,7 +262,10 @@ train_ds = Dataset(data=train_files, transform=train_transforms)
 train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) 
 
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) 
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)
+
+test_ds = Dataset(data=test_files, transform=test_transforms)
+test_loader = DataLoader(test_ds, batch_size=1, num_workers=2)
 ##################################
 
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer
@@ -459,3 +464,35 @@ for epoch in range(max_epochs):
 print(
     f"train completed, best_metric: {best_metric:.4f} "
     f"at epoch: {best_metric_epoch}") 
+##################################
+# Evaluate on the test dataset
+print("FINAL STEP: Evaluate on test dataset")
+model.eval()
+with torch.no_grad():
+    test_metric = DiceMetric(include_background=True, reduction="mean")
+    for test_data in test_loader:
+        test_inputs, test_labels = (
+            test_data["image"].to(device),
+            test_data["label"].to(device),
+        )
+
+        with torch.cuda.amp.autocast():
+            test_outputs = model(test_inputs)
+            test_outputs = torch.sigmoid(test_outputs)
+            test_outputs = (test_outputs > 0.5).float()
+            test_labels[test_labels > 0] = 1
+
+        print("Test outputs shape:", test_outputs.shape)
+        print("Test labels shape:", test_labels.shape)
+        print("Test outputs unique values:", torch.unique(test_outputs))
+        print("Test labels unique values:", torch.unique(test_labels))
+
+        test_metric(y_pred=test_outputs, y=test_labels)
+
+    test_metric_value = test_metric.aggregate().item()
+    test_metric.reset()
+    print(f"Test Mean Dice: {test_metric_value:.10f}")
+
+##################################
+#final print
+print("ALL DONE!") 
