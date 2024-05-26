@@ -500,6 +500,7 @@ with torch.no_grad(): ##disabling gradient calculation
     test_metric_value = test_metric.aggregate().item() ##This line computes the average Dice score across all batches processed so far.
     test_metric.reset() ##Resets the metric computation to start fresh for the next epoch.
     print(f"Test Mean Dice: {test_metric_value:.10f}")
+print("-" * 40)
 ##################################
 # Prepare data for CSV
 epochs = list(range(1, max_epochs + 1)) #Generate a list of epoch numbers.
