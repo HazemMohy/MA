@@ -550,8 +550,24 @@ df = pd.DataFrame({
 })
 
 # Add rows for best metric and test metric
-df = df.append({"Epoch": "Best Evaluation Metric", "Average Training Loss": best_metric}, ignore_index=True)
-df = df.append({"Epoch": "Test Dice Metric", "Average Training Loss": test_metric_value}, ignore_index=True)
+#df = df.append({"Epoch": "Best Evaluation Metric", "Average Training Loss": best_metric}, ignore_index=True)
+#df = df.append({"Epoch": "Test Dice Metric", "Average Training Loss": test_metric_value}, ignore_index=True)
+
+# Create DataFrames for the additional metrics
+best_metric_df = pd.DataFrame({
+    "Epoch": ["Best Evaluation Metric"],
+    "Average Training Loss": [best_metric],
+    "Average Validation Dice Metric": [None]
+})
+
+test_metric_df = pd.DataFrame({
+    "Epoch": ["Test Dice Metric"],
+    "Average Training Loss": [test_metric_value],
+    "Average Validation Dice Metric": [None]
+})
+
+# Concatenate the DataFrames
+df = pd.concat([df, best_metric_df, test_metric_df], ignore_index=True)
 
 # Create a self-explanatory CSV file name
 csv_file_name = f"tracking_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}_{test_metric_value:.4f}_PANDAS.csv"
