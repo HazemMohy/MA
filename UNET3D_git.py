@@ -165,7 +165,7 @@ print("Validation files:", val_files)
 print("Test files:", test_files)
 
 #Save the testing dataset to the Testing_Dataset folder
-test_dataset_path = os.path.join(testing_dataset_dir, f"test_dataset_{dataset_choice}_{slurm_job_id}.json")
+test_dataset_path = os.path.join(testing_dataset_dir, f"test_dataset_{slurm_job_id}_{dataset_choice}.json")
 with open(test_dataset_path, 'w') as f: #Opens the file specified by test_dataset_path in write mode ('w').
     json.dump(test_files, f, indent=4)
 print(f"Testing dataset saved to {test_dataset_path}")
@@ -425,7 +425,7 @@ for epoch in range(max_epochs):
             if metric > best_metric:
                 best_metric = metric
                 best_metric_epoch = epoch + 1
-                best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}.pth")
+                best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
                 torch.save(model.state_dict(), best_model_path)
                 print("Saved new best metric model at:", best_model_path)
             print(
@@ -454,14 +454,14 @@ for epoch in range(max_epochs):
         plt.plot(x, y)
 
         #saves the plots to specified directories.
-        fname = os.path.join(my_plots_dir, f"metrics_unet_{slurm_job_id}.png")
+        fname = os.path.join(my_plots_dir, f"metrics_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
         plt.savefig(fname, dpi=300, facecolor='w', edgecolor='w',
                 format='png', transparent=False, pad_inches=0.1)
         plt.show()
         print(f"Plot saved to {fname}")
         
         #saves the latest model state to specified directories.
-        latest_model_path = os.path.join(my_models_dir, f"latest_metric_model_unet_{slurm_job_id}.pth")
+        latest_model_path = os.path.join(my_models_dir, f"latest_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
         torch.save(model.state_dict(), latest_model_path)
         print(f"Saved the latest model state to {latest_model_path}")
 
