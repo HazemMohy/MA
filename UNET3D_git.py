@@ -67,7 +67,7 @@ my_plots_dir = "/lustre/groups/iterm/Hazem/MA/plots"
 os.makedirs(my_plots_dir, exist_ok=True)
 ##################################
 # Variable to choose the dataset
-dataset_choice = "2x"
+dataset_choice = "4x"
 
 # Define directories for datasets
 data_dirs = {
@@ -133,7 +133,7 @@ print("Validation files:", val_files)
 print("Test files:", test_files)
 
 #Save the testing dataset to the Testing_Dataset folder
-test_dataset_path = os.path.join(testing_dataset_dir, f"test_dataset_{slurm_job_id}.json")
+test_dataset_path = os.path.join(testing_dataset_dir, f"test_dataset_{dataset_choice}_{slurm_job_id}.json")
 with open(test_dataset_path, 'w') as f: #Opens the file specified by test_dataset_path in write mode ('w').
     json.dump(test_files, f, indent=4)
 print(f"Testing dataset saved to {test_dataset_path}")
