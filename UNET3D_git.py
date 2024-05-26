@@ -189,7 +189,7 @@ for epoch in range(max_epochs):
     epoch_loss = 0
     step = 0
 
-    for batch_data in train_loader:
+    for batch_data in train_loader: #how big is the batch? #For each batch, computes the loss, backpropagates gradients, and updates the model weights.
         step += 1
         inputs, labels = (
             batch_data["image"].to(device),
@@ -198,6 +198,8 @@ for epoch in range(max_epochs):
         print(f"Input shape before model: {inputs.shape}")  #to check input size
         optimizer.zero_grad() #Before you compute gradients for a new batch, you need to zero out the gradients from the previous batch. If you don't zero them out, gradients from different batches will accumulate, NOT desired!!
 
+
+        #Mixed Precision Training: Utilizes GPU capabilities for faster and memory-efficient training.
         with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
@@ -212,7 +214,7 @@ for epoch in range(max_epochs):
 
 
     epoch_loss /= step
-    epoch_loss_values.append(epoch_loss)
+    epoch_loss_values.append(epoch_loss) #Logs the average loss for each epoch.
     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
 
@@ -246,8 +248,8 @@ for epoch in range(max_epochs):
                 print("Validation labels unique values:", torch.unique(val_labels))
 
 
-
-                dice_metric(y_pred=val_outputs, y=val_labels)
+                #Computes Dice metrics on validation data.
+                dice_metric(y_pred=val_outputs, y=val_labels) 
                 
                 
             
@@ -255,6 +257,8 @@ for epoch in range(max_epochs):
             metric = dice_metric.aggregate().item() #this line is giving us the average DiceScore for the epoch without having to manually add the individual scores then dividing them by the length/Abzahl of the whole
             dice_metric.reset() # Reset the metric computation for the next epoch
             
+            
+            #Logs and saves the best model based on validation performance
             metric_values.append(metric)
             if metric > best_metric:
                 best_metric = metric
@@ -268,7 +272,7 @@ for epoch in range(max_epochs):
                 f"at epoch: {best_metric_epoch}"
             )
 
-
+    #plots the training loss and validation Dice metrics over epochs.
     if (epoch + 1) % 1 == 0: # from %3 to %1, to see more!
         print("Plot the loss and metric")
         
@@ -287,17 +291,19 @@ for epoch in range(max_epochs):
         plt.xlabel("epoch")
         plt.plot(x, y)
 
+        #saves the plots to specified directories.
         fname = os.path.join(my_plots_dir, f"metrics_unet_{slurm_job_id}.png")
         plt.savefig(fname, dpi=300, facecolor='w', edgecolor='w',
                 format='png', transparent=False, pad_inches=0.1)
         plt.show()
         print(f"Plot saved to {fname}")
         
+        #saves the latest model state to specified directories.
         latest_model_path = os.path.join(my_models_dir, f"latest_metric_model_unet_{slurm_job_id}.pth")
         torch.save(model.state_dict(), latest_model_path)
         print(f"Saved the latest model state to {latest_model_path}")
 
-
+#prints a summary message with the best metric achieved and the corresponding epoch.
 print(
     f"train completed, best_metric: {best_metric:.4f} "
     f"at epoch: {best_metric_epoch}") 
