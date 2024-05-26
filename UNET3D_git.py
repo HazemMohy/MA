@@ -531,8 +531,35 @@ with open(csv_file_path, mode='w', newline='') as file:
     writer.writerow(["Test Dice Metric", test_metric_value])
 
 print(f"Metrics CSV saved to {csv_file_path}")
+##################################
+# Prepare data for CSV
+epochs = list(range(1, max_epochs + 1))
+training_losses = epoch_loss_values
+validation_metrics = [None] * max_epochs
 
+for i, metric in enumerate(metric_values):
+    validation_epoch = (i + 1) * val_interval
+    validation_metrics[validation_epoch - 1] = metric
 
+# Create a DataFrame
+df = pd.DataFrame({
+    "Epoch": epochs,
+    "Average Training Loss": training_losses,
+    "Average Validation Dice Metric": validation_metrics
+})
+
+# Add rows for best metric and test metric
+df = df.append({"Epoch": "Best Evaluation Metric", "Average Training Loss": best_metric}, ignore_index=True)
+df = df.append({"Epoch": "Test Dice Metric", "Average Training Loss": test_metric_value}, ignore_index=True)
+
+# Create a self-explanatory CSV file name
+csv_file_name = f"tracking_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}_{test_metric_value:.4f}_PANDAS.csv"
+csv_file_path = os.path.join(tracking_dir, csv_file_name)
+
+# Save the DataFrame to a CSV file
+df.to_csv(csv_file_path, index=False)
+
+print(f"Metrics CSV saved to {csv_file_path}")
 ##################################
 #final print
 print("-" * 40)
