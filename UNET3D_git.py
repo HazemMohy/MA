@@ -183,7 +183,7 @@ post_label = AsDiscrete(to_onehot=2, n_classes=2)
 ##################################
 
 for epoch in range(max_epochs):
-    print("-" * 10)
+    print("-" * 40)
     print(f"epoch {epoch + 1}/{max_epochs}")
     model.train() # Tells the model that it's being trained and not used for inference, model.eval()
     epoch_loss = 0
