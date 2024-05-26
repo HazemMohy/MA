@@ -44,33 +44,45 @@ import tempfile
 import shutil
 import os
 import glob
+import random
+import json
 ##################################
 
 import warnings
 warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 #print_config()
 ##################################
+#SLURM_JOB_ID
 slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
+
+##################################
+#Defining the directories
+testing_dataset_dir = "/lustre/groups/iterm/Hazem/MA/Testing_Dataset"
+os.makedirs(testing_dataset_dir, exist_ok=True)
 
 my_models_dir = "/lustre/groups/iterm/Hazem/MA/models"
 os.makedirs(my_models_dir, exist_ok=True)
 
 my_plots_dir = "/lustre/groups/iterm/Hazem/MA/plots"
 os.makedirs(my_plots_dir, exist_ok=True)
-
-
-
 ##################################
-#data_dir = "/lustre/groups/iterm/Annotated_Datasets/Annotated Datasets/Alpha-BTX - Neuromuscular Junctions/2x/" #this one is causing some problems because of the spacings at the names, which is why I just copied the data to my folder and wrote
-#down a simple folder-name!
-data_dir = "/lustre/groups/iterm/Hazem/MA/data/2x"
+# Variable to choose the dataset
+dataset_choice = "2x"
 
+# Define directories for datasets
+data_dirs = {
+    "2x": "/lustre/groups/iterm/Hazem/MA/data/2x",
+    "4x": "/lustre/groups/iterm/Hazem/MA/data/4x"
+}
 
+# Set the data directory based on the chosen dataset
+data_dir = data_dirs[dataset_choice]
+##################################
 #train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2] #here I just used 2 patches of my data as a test so I shall not wait that long!
 train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2]
 train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))[:2]
 train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))[:2]
-
+##################################
 
 print(os.path.join(data_dir, 'bg', "*.nii.gz"))
 
@@ -79,7 +91,7 @@ if train_bg:
     print(train_bg[0])
 else:
     print("No .nii.gz files found in the specified directory.")
-
+##################################
 
 data_dicts = [
     {"bg": bg, "raw": raw, "label": gt}
@@ -88,10 +100,43 @@ data_dicts = [
 
 print(data_dicts[0])
 ##################################
+#Data Split
+# Shuffle the data to ensure randomness BUT the testing dataset MUST ALWAYS be the SAME, so that I can compare between the performance of the different runs. Therefore, BEFORE shuffling, a random seed will be set for reproducibility
+random.seed(42)
+random.shuffle(data_dicts)
 
-#these 2 lines here are what to be converted to the data splitting; and it shall be AUTOMATICALLY done!
-train_files = data_dicts[:-1]
-val_files = data_dicts[-1:] 
+# Calculate the number of patches for each set
+num_total = len(data_dicts)
+num_test = max(1, round(num_total * 0.2))  #calculated as 20% of the total number of patches, rounded to the nearest whole number (ensuring at least one patch).
+num_train_val = num_total - num_test #the remaining patches after allocating the test set.
+
+# Split the remaining patches into training and validation
+num_val = max(1, round(num_train_val * 0.2)) #calculated as 20% of the training/validation patches, rounded to the nearest whole number (ensuring at least one patch).
+num_train = num_train_val - num_val # the remaining patches after allocating the validation set (and the testing set).
+
+# Create the splits
+test_files = data_dicts[:num_test]
+train_val_files = data_dicts[num_test:]
+train_files = train_val_files[:num_train]
+val_files = train_val_files[num_train:]
+
+# Print the split counts for verification
+print(f"Total patches: {num_total}")
+print(f"Training patches: {num_train}")
+print(f"Validation patches: {num_val}")
+print(f"Testing patches: {num_test}")
+
+
+# Print to verify the contents of each split
+print("Train files:", train_files)
+print("Validation files:", val_files)
+print("Test files:", test_files)
+
+#Save the testing dataset to the Testing_Dataset folder
+test_dataset_path = os.path.join(testing_dataset_dir, f"test_dataset_{slurm_job_id}.json")
+with open(test_dataset_path, 'w') as f: #Opens the file specified by test_dataset_path in write mode ('w').
+    json.dump(test_files, f, indent=4)
+print(f"Testing dataset saved to {test_dataset_path}")
 ##################################
 #this function is a good check for my tensor dimensions, so that I do not have the dimensions-mismatch-ERROR!
 #x is expected to be a dictionary containing keys for images and labels.
