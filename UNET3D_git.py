@@ -94,42 +94,79 @@ train_files = data_dicts[:-1]
 val_files = data_dicts[-1:] 
 ##################################
 #this function is a good check for my tensor dimensions, so that I do not have the dimensions-mismatch-ERROR!
+#x is expected to be a dictionary containing keys for images and labels.
 def print_shape(x):
-    print(f"Shape of {x.keys()}: {x['image'].shape}, {x['label'].shape}")
+    print(f"Shape of {x.keys()}: {x['image'].shape}, {x['label'].shape}") #This print statement is very useful for debugging. It ensures that the tensors have the expected dimensions at the point where the function is called.
     return x
 
 ##################################
-#here am defining the dice_metric-class. It is NO MORE a function, it is a class, as MONAI-development team has structures many of their features!
+#here am defining the dice_metric-class. It is NO MORE a function, it is a class, as MONAI-development team has RE-structured many of their features!
+#It calculates the Dice coefficient, a measure of overlap between two samples.
+#include_background=True: the metric will consider the background pixels in its calculation, which is useful in some cases where distinguishing background from the object of interest is important; which is EXACTLY my task.
+#reduction="mean": indicates that the mean Dice score across all items in the batch will be calculated.
+#Therefore, it provides a single scalar value representing the average Dice score over the batch, which is useful for tracking performance during training and validation.
 #So here the class is defined and assigned to a variable. Then down at the evaluation block, the parameters (= my parameters: inputs & outputs) must be then added to the assigned variable.
 dice_metric = DiceMetric(include_background=True, reduction="mean")
 ##################################
 
 print("Create transforms")
-train_transforms = Compose(
+#transformations will be applied in the VORGEGEBEN specific order!
+#the order in the preprocessing is IMPORTANT! One of my mistakes was having the padding before the concatenating which caused errors! Furthermore, the normalization should be BEFORE the concatentation!
+train_transforms = Compose( 
     [
-        LoadImaged(keys=["bg", "raw", "label"]),
+        #Loads images and labels into tensors with shapes depending on the original data.
+        LoadImaged(keys=["bg", "raw", "label"]), 
+        
+        #Medical images often come in formats where the channel dimension is absent, especially for grayscale images. Adding a channel dimension is necessary because deep learning frameworks like PyTorch expect a channel dimension.
+        #It adds a channel dimension to the specified keys in the input dictionary. #'bg'/'raw'/'label' might become [1, D, H, W] if it was [D, H, W]. The added 1 indicates a single channel. 
+        #Neural network architectures, including the 3D UNet, typically expect inputs with a shape that includes a channel dimension [C, D, H, W] or [C, H, W] for 2D images.
+        #The UNet model expects input tensors with a specific shape that includes a channel dimension. Failing to add this dimension would result in shape mismatches and errors during model training or inference.
         AddChanneld(keys=["bg", "raw", "label"]),
+        
+        #It normalizes the intensity values of the specified keys in the input dictionary.
+        #nonzero=True indicates that normalization should be computed only on non-zero values in the tensor. #CHANGE
+        #Normalization typically involves scaling the intensity values of an image to a specific range, often [0, 1] or [-1, 1].
+        #By focusing on non-zero values, the transform avoids skewing the normalization due to large regions of zeros (background).
+        #Ensures that all images have a similar intensity range, which can improve the stability and performance of the neural network during training. AND
+        #Helps in faster convergence of the model by providing a uniform range of input values. AND Reduces the impact of varying lighting conditions and contrast levels in the images.
         NormalizeIntensityd(keys="bg", nonzero=True), # Normalize intensity
-        NormalizeIntensityd(keys="raw", nonzero=True), # Normalize intensity
-        ConcatItemsd(keys=["bg", "raw"], name="image", dim=0),
-        SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'),
-        Lambda(print_shape), #print the shape after padding as a CHECK for tensor dimensions, avoiding dimensions-mismatch!
+        NormalizeIntensityd(keys="raw", nonzero=True), #Normalizes intensities but does not change tensor shapes.
+        
+        #dim=0 specifies that the concatenation should occur along the channel dimension (the first dimension in this case).
+        #This concatenated image tensor is what will be fed into the neural network model during training and validation AND this Ensures that the model receives a multi-channel input, combining information from both bg and raw. #This can be particularly
+        #useful in scenarios where different types of images provide complementary information. This combined input tensor allows the model to learn from both sources simultaneously, potentially improving segmentation performance.
+        ConcatItemsd(keys=["bg", "raw"], name="image", dim=0), #Concatenates 'bg' and 'raw' along the channel dimension to form 'image'; 'image' becomes [2, D, H, W] where 2 comes from concatenating the channels of 'bg' and 'raw'.
+        
+        #spatial_size=(320, 320, 320) specifies the desired/target output size for each dimension (Depth, Height, Width).
+        #mode='reflect' specifies the padding mode. 'reflect' mode pads with the reflection of the vector mirrored on the edge of the tensor.
+        #Reflect padding helps in scenarios where the model needs context from the edges of the image. It provides a mirrored context, which can be beneficial for learning spatial features near the borders.
+        #Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
+        #If the input tensors are already larger than the specified spatial_size, no padding is added, and the tensors are left unchanged.
+        #Ensures that all input tensors have a consistent size, which is crucial for batch processing and model input. This is particularly important for 3D medical images, where varying image sizes are common.
+        #The UNet model expects input tensors of a specific shape, so padding is necessary to standardize the input sizes.
+        SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'), #Pads tensors to ensure all dimensions match (320, 320, 320); 'image' becomes [2, 320, 320, 320].; 'label' becomes [1, 320, 320, 320].
+        
+        #see explanation at the function
+        Lambda(print_shape), #print the shape after padding as a CHECK for tensor dimensions, avoiding dimensions-mismatch! #print the shape after the 6 transforms
+        
+        #It converts the specified keys in the input dictionary to PyTorch tensors. PyTorch tensors are necessary for compatibility with the PyTorch framework, which is used for model training and inference.
+        #Enables the use of GPU acceleration for training and inference, as PyTorch operations are optimized for performance on GPUs.
         ToTensord(keys=["image", "label"]),
-        #added "reflective" padding. Check if the padding size (320, 320, 320) is suitable for your dataset and does not introduce too much background or alter the aspect ratio significantly.
-        #the order in the preprocessing is IMPORTANT! One of my mistakes was having the padding before the concatenating which caused errors! Another one, I beleive, is having the normalization BEFORE the concatentation!
-        #you can check other "useful" transfoms from the safe-copy, vor allem: EnsureChannelFirstd (check the comment as well), cropping-transforms, random-tranforms, lambda-transforms
+        
+        
+        #you can check other "useful" transfoms from the safe-copy, vor allem: EnsureChannelFirstd (check the comment as well), cropping-transforms, random-tranforms, lambda-transforms #CHANGE
         #Same for evaluation transforms
     ]
 )
 val_transforms = Compose(
     [
-        LoadImaged(keys=["bg", "raw", "label"]),
-        AddChanneld(keys=["bg", "raw", "label"]),
-        NormalizeIntensityd(keys="bg", nonzero=True),
-        NormalizeIntensityd(keys="raw", nonzero=True),
-        ConcatItemsd(keys=["bg", "raw"], name="image",dim=0),
-        SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'),
-        Lambda(print_shape), #print the shape after padding
+        LoadImaged(keys=["bg", "raw", "label"]), 
+        AddChanneld(keys=["bg", "raw", "label"]), 
+        NormalizeIntensityd(keys="bg", nonzero=True), 
+        NormalizeIntensityd(keys="raw", nonzero=True), 
+        ConcatItemsd(keys=["bg", "raw"], name="image",dim=0), 
+        SpatialPadd(keys=["image", "label"], spatial_size=(320, 320, 320), mode='reflect'), 
+        Lambda(print_shape), 
         ToTensord(keys=["image", "label"]),
         #NOT every transform in the training-preprocessing shall be put as well in the evaluation-preprocessing!
     ]   
@@ -137,38 +174,78 @@ val_transforms = Compose(
 ##################################
 
 print("Define dataset loaders")
+#This dataset object is used to create a data loader that feeds batches of data into the model during training.
 train_ds = Dataset(data=train_files, transform=train_transforms)
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) #set shuffle to True/False and inspect!
+
+#The DataLoader efficiently handles the loading, preprocessing, and batching of data, making the training process smoother and faster.
+#batch_size=1: The number of samples per batch. Setting it to 1 means each batch will contain one sample = only one "image" and only one "label".
+#batch_size = 1 is useful for debugging, as it allows examining each sample individually. For actual training, larger batch sizes are typically used to take advantage of parallel processing and to stabilize gradient estimates.
+#Increasing the number of batches allows the model to process multiple samples in parallel, improving training efficiency. AND Larger batch sizes can stabilize gradient estimates but require more memory.
+#PASS AUF! You must know your data in order to set a reasonable optimal batch size! Otherwise, you will get a BIG error!
+#shuffle=False: Whether to shuffle the data at every epoch. If False, data is not shuffled. If True, data is shuffled. #It is better to be true BUT how can I maintain the same testing-dataset while shuffling? #CHANGE
+#For training, setting shuffle=True is generally recommended to ensure that the model does not learn the order of the data and to provide better generalization.
+#num_workers=4: The number of subprocesses to use for data loading. More workers can speed up data loading. The optimal number of workers depends on the system’s hardware. #CHANGE
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) 
 
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) #set shuffle to True/False and inspect!
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=2) 
 ##################################
 
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer
 print("Create Model")
 device = torch.device("cuda:0")
 model = UNet(
-    spatial_dims=3,
-    in_channels=2,
-    out_channels=1, #try it with 2
-    channels=(16, 32, 64, 128, 256),
-    strides=(2, 2, 2, 2),
-    num_res_units=2,
+    spatial_dims=3, #the input data is 3-dimensional (3D medical images).
+    in_channels=2, #Specifies that the input has 2 channels (concatenated 'bg' and 'raw' images).
+    out_channels=1, #Specifies that the output has 1 channel (a single segmentation mask) #try it with 2 #CHANGE (although it seems unlogic)
+    
+    #Specifies the number of filters (also known as feature maps or channels) in each layer of the UNet.
+    #The specified number of filters impacts the model's capacity to learn features at different levels of abstraction.
+    #Increasing the number of filters can improve the model's ability to capture complex features but also increases computational cost and memory usage.
+    #These numbers define the depth (number of filters) of the convolutional layers at each stage of the encoder and decoder paths in the UNet.
+    #e.g. Stage 1(Encoder): Input: Image with in_channels (e.g., 2 channels for 'bg' and 'raw').; Convolutions: 16 filters (specified by the first element of channels).; Operations: Convolution → Batch Normalization → Activation (ReLU).
+    channels=(16, 32, 64, 128, 256),  
+    
+    #Strides refer to the step size with which the convolutional filters move across the input image. In the context of the UNet, strides specify the down-sampling rate for each layer in the encoder.
+    #Down-sampling reduces the spatial dimensions (height, width, depth) of the feature maps while increasing the receptive field.
+    #A stride of (2, 2, 2, 2) means that each down-sampling operation will reduce the size of the feature maps by a factor of 2. This is commonly implemented using operations like max pooling or convolutions with a stride greater than 1.
+    #e.g. the input shape to the UNet is [2, 320, 320, 320] --> with a stride of 2 will reduce the dimensions to [16, 160, 160, 160]. -->  [32, 80, 80, 80]. --> [64, 40, 40, 40] --> [128, 20, 20, 20] --> [256, 10, 10, 10]
+    strides=(2, 2, 2, 2), #Specifies the stride for each down-sampling layer.
+    
+    #Residual units refer to blocks of layers that use residual connections to facilitate training deeper networks. A residual connection adds the input of the block to its output, helping to mitigate the vanishing gradient problem and improving gradient flow through the network.
+    #Typically, a residual block might include multiple convolutional layers, batch normalization, and ReLU activations. In this case, num_res_units=2 indicates that each block will consist of two such layers.
+    #e.g. Without Residual Units: y = Conv(x); y = BatchNorm(y); y = ReLU(y) VS With Residual Units (A residual block with two units): residual = x; y = Conv(x); y = BatchNorm(y); y = ReLU(y); y = Conv(y); y = BatchNorm(y); y = y + residual; y = ReLU(y)
+    #Residual connections help maintain gradients during backpropagation, making it easier to train deeper networks.
+    #Can lead to better performance by allowing the network to learn identity mappings more easily, which is beneficial for deep architectures like UNet.
+    num_res_units=2, # Specifies the number of residual units in each layer.
+    
     norm=Norm.BATCH,
 ).to(device)
 ##################################
 print("Create Loss")
-loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #set include_backgroung to true; and switch from softmax to sigmoid; check as well the to_onehot_y-parameter #try softmax again
+
+#include_background=True: Includes the background class in the loss calculation. For binary segmentation tasks, this parameter ensures that the loss accounts for both foreground and background pixels.
 #Typically for DiceLoss with a binary label you would set include_background to True since we want to compare the foreground against background.
+#to_onehot_y=True: Converts the ground truth labels to one-hot encoding before computing the loss. Ensures that each class is treated independently in the loss calculation. For binary segmentation, the ground truth labels are converted from shape [B, 1, D, H, W] to [B, C, D, H, W], where B is the batch size and C is the number of classes.
 #to_onehot_y == OneHotEncoding ?? ((OneHotEncoding = Turn all unique values into lists of 0's and 1's where the target value is 1 and the rest are 0's. For example, with car colors green, red and blue: a green car's color feature would be represented as [1,0,0] while a red one would be [0,1,0]))
 #OneHotEncoding is a type of feature encoding which is turning values within your dataset(even images) into numbers, bec. ML-model requires all values to be numerical
+#sigmoid=True: Applies a sigmoid activation to the network outputs before computing the loss. The sigmoid function maps the network outputs to the range [0, 1], which is suitable for binary and multi-class segmentation tasks. Converts logits (raw output values from the network) into probabilities.
 #You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
+loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #try softmax #try another loss function(binary cross entropy loss) #CHANGE
+
 ##################################
 print("Create Optimizer ")
-learning_rate = 1e-5
+#The learning rate is a crucial hyperparameter that controls how much to adjust the model's weights with respect to the loss gradient during each optimization step.
+#A smaller learning rate can lead to more stable training but might require more epochs to converge.
+learning_rate = 1e-5 
+
+#model.parameters() provides the optimizer with the parameters of the model that need to be updated during training.
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
-scaler = torch.cuda.amp.GradScaler() #Scaled gradient
+
+#GradScaler is used for mixed precision training, which allows for faster computation and reduced memory usage by using 16-bit (half-precision) floating-point numbers instead of the default 32-bit (single-precision).
+#GradScaler scales the loss before backpropagation to prevent gradients from becoming too small (underflow) or too large (overflow) in the 16-bit representation.
 #The scaler dynamically adjusts these scales, ensuring that gradients are neither too small to cause underflow nor too large to cause overflow.
+scaler = torch.cuda.amp.GradScaler() #Scaled gradient
 ##################################
 print("Execute a typical PyTorch training process")
 max_epochs = 10 #only 10 as a test
@@ -249,13 +326,16 @@ for epoch in range(max_epochs):
 
 
                 #Computes Dice metrics on validation data.
-                dice_metric(y_pred=val_outputs, y=val_labels) 
+                dice_metric(y_pred=val_outputs, y=val_labels)
+                #"dice_metric" is used to evaluate the model's performance on the validation set. It calculates the Dice coefficient between the predicted segmentation masks (val_outputs) and the ground truth masks/labels (val_labels).
                 
                 
             
-            
+            #This line computes the average Dice score across all batches processed so far.
+            #This call computes the mean Dice score over all batches, providing a single performance metric for the epoch.
             metric = dice_metric.aggregate().item() #this line is giving us the average DiceScore for the epoch without having to manually add the individual scores then dividing them by the length/Abzahl of the whole
-            dice_metric.reset() # Reset the metric computation for the next epoch
+            #Resets the metric computation to start fresh for the next epoch.
+            dice_metric.reset()
             
             
             #Logs and saves the best model based on validation performance
