@@ -67,7 +67,7 @@ my_plots_dir = "/lustre/groups/iterm/Hazem/MA/plots"
 os.makedirs(my_plots_dir, exist_ok=True)
 ##################################
 # Variable to choose the dataset
-dataset_choice = "4x"
+dataset_choice = "2x"
 
 # Define directories for datasets
 data_dirs = {
@@ -86,7 +86,20 @@ train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))
 
 print(os.path.join(data_dir, 'bg', "*.nii.gz"))
 
-print(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz"))) #if this prints an empty list ([]), then the issue is definitely with the path or file presence.
+
+# Print original paths #if this prints an empty list ([]), then the issue is definitely with the path or file presence.
+original_bg_paths = glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz"))
+print("Original bg paths:")
+for path in original_bg_paths:
+    print(path)
+
+# Print sorted paths
+sorted_bg_paths = sorted(original_bg_paths)
+print("Sorted bg paths:")
+for path in sorted_bg_paths:
+    print(path)
+
+
 if train_bg:
     print(train_bg[0])
 else:
@@ -103,8 +116,22 @@ print(data_dicts[0])
 #Data Split
 # Shuffle the data to ensure randomness BUT the testing dataset MUST ALWAYS be the SAME, so that I can compare between the performance of the different runs. Therefore, BEFORE shuffling, a random seed will be set for reproducibility
 random.seed(42)
+
+# Debugging: Print data_dicts before shuffling
+print("Data before shuffling:")
+for d in data_dicts:
+    print(d)
+
+# Shuffle the data to ensure randomness
 random.shuffle(data_dicts)
 
+# Debugging: Print data_dicts after shuffling
+print("Data after shuffling:")
+for d in data_dicts:
+    print(d)
+
+
+##################################
 # Calculate the number of patches for each set
 num_total = len(data_dicts)
 num_test = max(1, round(num_total * 0.2))  #calculated as 20% of the total number of patches, rounded to the nearest whole number (ensuring at least one patch).
