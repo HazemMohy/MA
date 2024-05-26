@@ -468,29 +468,32 @@ print(
 # Evaluate on the test dataset
 print("FINAL STEP: Evaluate on test dataset")
 model.eval()
-with torch.no_grad():
-    test_metric = DiceMetric(include_background=True, reduction="mean")
+with torch.no_grad(): ##disabling gradient calculation
+    test_metric = DiceMetric(include_background=True, reduction="mean") #defining the test_metric-CLASS (NOT an object)
     for test_data in test_loader:
         test_inputs, test_labels = (
             test_data["image"].to(device),
             test_data["label"].to(device),
         )
 
-        with torch.cuda.amp.autocast():
+        with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
             test_outputs = model(test_inputs)
-            test_outputs = torch.sigmoid(test_outputs)
-            test_outputs = (test_outputs > 0.5).float()
+            #Apply sigmoid activation and threshold to obtain binary outputs
+            test_outputs = torch.sigmoid(test_outputs) # Sigmoid to convert logits to probabilities
+            test_outputs = (test_outputs > 0.5).float() # Thresholding probabilities to binary values
             test_labels[test_labels > 0] = 1
 
+        #to ensure data shapes and types match the expected:
         print("Test outputs shape:", test_outputs.shape)
         print("Test labels shape:", test_labels.shape)
         print("Test outputs unique values:", torch.unique(test_outputs))
         print("Test labels unique values:", torch.unique(test_labels))
 
+        #Computes Dice metrics on testing data.
         test_metric(y_pred=test_outputs, y=test_labels)
 
-    test_metric_value = test_metric.aggregate().item()
-    test_metric.reset()
+    test_metric_value = test_metric.aggregate().item() ##This line computes the average Dice score across all batches processed so far.
+    test_metric.reset() ##Resets the metric computation to start fresh for the next epoch.
     print(f"Test Mean Dice: {test_metric_value:.10f}")
 
 ##################################
