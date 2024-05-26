@@ -466,6 +466,7 @@ print(
     f"at epoch: {best_metric_epoch}") 
 ##################################
 # Evaluate on the test dataset
+print("-" * 40)
 print("FINAL STEP: Evaluate on test dataset")
 model.eval()
 with torch.no_grad(): ##disabling gradient calculation
@@ -495,7 +496,9 @@ with torch.no_grad(): ##disabling gradient calculation
     test_metric_value = test_metric.aggregate().item() ##This line computes the average Dice score across all batches processed so far.
     test_metric.reset() ##Resets the metric computation to start fresh for the next epoch.
     print(f"Test Mean Dice: {test_metric_value:.10f}")
+##################################
 
 ##################################
 #final print
+print("-" * 40)
 print("ALL DONE!") 
