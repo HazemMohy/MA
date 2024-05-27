@@ -70,6 +70,13 @@ os.makedirs(my_plots_dir, exist_ok=True)
 
 tracking_dir = "/lustre/groups/iterm/Hazem/MA/Tracking"
 os.makedirs(tracking_dir, exist_ok=True)
+
+runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
+os.makedirs(runs_dir, exist_ok=True)
+
+run_folder_name = f"run_{slurm_job_id}"
+run_dir = os.path.join(runs_dir, run_folder_name)
+os.makedirs(run_dir, exist_ok=True)
 ##################################
 # Variable to choose the dataset
 dataset_choice = "2x"
@@ -540,10 +547,49 @@ df = pd.concat([df, best_metric_df, test_metric_df], ignore_index=True)
 csv_file_name = f"tracking_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}_{test_metric_value:.4f}.csv"
 csv_file_path = os.path.join(tracking_dir, csv_file_name)
 
+
+
 # Save the DataFrame to a CSV file
 df.to_csv(csv_file_path, index=False)
 
 print(f"Metrics CSV saved to {csv_file_path}")
+##################################
+## the Runs folder - all in one
+# Save csv file at Runs
+run_csv_file_path = os.path.join(run_dir, csv_file_name)
+df.to_csv(run_csv_file_path, index=False)
+print(f"Metrics CSV saved to {csv_file_path} and {run_csv_file_path}")
+
+# Save the best model at Runs
+run_best_model_path = os.path.join(run_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+shutil.copy(best_model_path, run_best_model_path)
+print(f"Saved best model at: {best_model_path} and {run_best_model_path}")
+
+# Save the latest model state at Runs
+run_latest_model_path = os.path.join(run_dir, f"latest_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+shutil.copy(latest_model_path, run_latest_model_path)
+print(f"Saved latest model state to {latest_model_path} and {run_latest_model_path}")
+
+# Save the plot at Runs
+run_plot_file_path = os.path.join(run_dir, f"metrics_unet_plot_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
+shutil.copy(fname, run_plot_file_path)
+print(f"Plot saved to {plot_file_path} and {run_plot_file_path}")      
+
+# Save the test dataset at Runs
+run_test_dataset_path = os.path.join(run_dir, f"test_dataset_{slurm_job_id}_{dataset_choice}.json")
+shutil.copy(test_dataset_path, run_test_dataset_path)
+print(f"Testing dataset saved to {test_dataset_path} and {run_test_dataset_path}")
+
+# Save output and error at Runs
+slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output.txt"
+slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error.txt"
+run_slurm_output_file = os.path.join(run_dir, f"3D_Seg_{slurm_job_id}_0_output.txt")
+run_slurm_error_file = os.path.join(run_dir, f"3D_Seg_{slurm_job_id}_0_error.txt")
+
+shutil.copy(slurm_output_file, run_slurm_output_file)
+shutil.copy(slurm_error_file, run_slurm_error_file)
+print(f"Slurm output file copied to {run_slurm_output_file}")
+print(f"Slurm error file copied to {run_slurm_error_file}")
 ##################################
 #final print
 print("-" * 40)
