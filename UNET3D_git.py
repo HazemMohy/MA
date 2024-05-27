@@ -67,6 +67,8 @@ with open('hyperparameters.json', 'r') as f:
 dataset_choice = hyperparameters["dataset_choice"]
 learning_rate = hyperparameters["learning_rate"]
 max_epochs = hyperparameters["max_epochs"]
+batch_size = hyperparameters["batch_size"]
+val_interval = hyperparameters["val_interval"]
 ##################################
 #Defining the directories
 testing_dataset_dir = "/lustre/groups/iterm/Hazem/MA/Testing_Dataset"
@@ -281,13 +283,13 @@ train_ds = Dataset(data=train_files, transform=train_transforms)
 #shuffle=False: Whether to shuffle the data at every epoch. If False, data is not shuffled. If True, data is shuffled. #It is better to be true BUT how can I maintain the same testing-dataset while shuffling? #CHANGE
 #For training, setting shuffle=True is generally recommended to ensure that the model does not learn the order of the data and to provide better generalization.
 #num_workers=4: The number of subprocesses to use for data loading. More workers can speed up data loading. The optimal number of workers depends on the system’s hardware. #CHANGE
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=False, num_workers=4) 
+train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=False, num_workers=4) 
 
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)
+val_loader = DataLoader(val_ds, batch_size=batch_size, num_workers=2)
 
 test_ds = Dataset(data=test_files, transform=test_transforms)
-test_loader = DataLoader(test_ds, batch_size=1, num_workers=2)
+test_loader = DataLoader(test_ds, batch_size=batch_size, num_workers=2)
 ##################################
 
 # standard PyTorch program style: create UNet, DiceLoss and Adam optimizer
@@ -348,7 +350,7 @@ scaler = torch.cuda.amp.GradScaler() #Scaled gradient
 ##################################
 print("Execute a typical PyTorch training process")
 max_epochs = max_epochs #only 10 as a test
-val_interval = 1 #from 2 to 1
+val_interval = val_interval #from 2 to 1
 best_metric = -1
 best_metric_epoch = -1
 epoch_loss_values = []
