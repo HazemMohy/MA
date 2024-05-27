@@ -2,7 +2,6 @@
     "dataset_choice": "2x",
     "learning_rate": 1e-5,
     "max_epochs": 10,
-    "batch_size": 1,
     "comments": {
         "batch_size_conditions": {
             "max_epochs_100": "Batch_size = 1 or 2",
