@@ -68,7 +68,10 @@ dataset_choice = hyperparameters["dataset_choice"]
 learning_rate = hyperparameters["learning_rate"]
 max_epochs = hyperparameters["max_epochs"]
 batch_size = hyperparameters["batch_size"]
-val_interval = hyperparameters["val_interval"]
+if max_epochs == 100:
+    val_interval = 5
+elif max_epochs == 1000:
+    val_interval = 20
 ##################################
 #Defining the directories
 testing_dataset_dir = "/lustre/groups/iterm/Hazem/MA/Testing_Dataset"
