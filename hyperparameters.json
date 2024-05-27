@@ -1,6 +1,6 @@
 {
     "dataset_choice": "2x",
     "learning_rate": 1e-5,
-    "max_epochs": 100
+    "max_epochs": 1000
 }
 
