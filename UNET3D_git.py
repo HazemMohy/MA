@@ -573,7 +573,7 @@ print(f"Saved latest model state to {latest_model_path} and {run_latest_model_pa
 # Save the plot at Runs
 run_plot_file_path = os.path.join(run_dir, f"metrics_unet_plot_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
 shutil.copy(fname, run_plot_file_path)
-print(f"Plot saved to {plot_file_path} and {run_plot_file_path}")      
+print(f"Plot saved to {fname} and {run_plot_file_path}")      
 
 # Save the test dataset at Runs
 run_test_dataset_path = os.path.join(run_dir, f"test_dataset_{slurm_job_id}_{dataset_choice}.json")
