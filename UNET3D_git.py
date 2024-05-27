@@ -58,6 +58,16 @@ warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
 
 ##################################
+# Load hyperparameters from the JSON file
+with open('hyperparameters.json', 'r') as f:
+    hyperparameters = json.load(f)
+
+
+# Extract hyperparameters
+dataset_choice = hyperparameters["dataset_choice"]
+learning_rate = hyperparameters["learning_rate"]
+max_epochs = hyperparameters["max_epochs"]
+##################################
 #Defining the directories
 testing_dataset_dir = "/lustre/groups/iterm/Hazem/MA/Testing_Dataset"
 os.makedirs(testing_dataset_dir, exist_ok=True)
@@ -79,7 +89,7 @@ run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
 ##################################
 # Variable to choose the dataset
-dataset_choice = "2x"
+dataset_choice = dataset_choice
 
 # Define directories for datasets
 data_dirs = {
@@ -326,7 +336,7 @@ loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True
 print("Create Optimizer ")
 #The learning rate is a crucial hyperparameter that controls how much to adjust the model's weights with respect to the loss gradient during each optimization step.
 #A smaller learning rate can lead to more stable training but might require more epochs to converge.
-learning_rate = 1e-5 
+learning_rate = learning_rate
 
 #model.parameters() provides the optimizer with the parameters of the model that need to be updated during training.
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
@@ -337,7 +347,7 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 scaler = torch.cuda.amp.GradScaler() #Scaled gradient
 ##################################
 print("Execute a typical PyTorch training process")
-max_epochs = 10 #only 10 as a test
+max_epochs = max_epochs #only 10 as a test
 val_interval = 1 #from 2 to 1
 best_metric = -1
 best_metric_epoch = -1
