@@ -1,0 +1,25 @@
+from monai.transforms import ThresholdIntensity
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Generate a random image
+np.random.seed(0)
+img = np.random.rand(10, 10)
+
+# Plot the original image
+plt.figure(figsize=(8, 8))
+plt.subplot(1, 2, 1)
+plt.title('Original Image')
+plt.imshow(img, cmap='gray')
+plt.colorbar()
+
+# Create a ThresholdIntensity transform for the upper value
+upper_threshold_transform = ThresholdIntensity(threshold=0.7, above=True, cval=1, below=False, bval=0)
+thresholded_image = upper_threshold_transform(img)
+
+# Plot the transformed image
+plt.subplot(1, 2, 2)
+plt.title('Thresholded Image (Upper)')
+plt.imshow(thresholded_image, cmap='gray')
+plt.colorbar()
+plt.show()
