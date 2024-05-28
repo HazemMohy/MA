@@ -70,10 +70,10 @@ max_epochs = hyperparameters["max_epochs"]
 
 # Conditional batch size and val_interval based on max_epochs
 if max_epochs == 100: 
-    batch_size = 2 
+    batch_size = 8 #immer 4 #noch höher
     val_interval = 5
 elif max_epochs == 1000:
-    batch_size = 4
+    batch_size = 8
     val_interval = 20
 ##################################
 #Defining the directories
