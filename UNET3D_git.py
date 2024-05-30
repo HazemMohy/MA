@@ -50,6 +50,7 @@ import json
 import csv
 import pandas as pd
 import nibabel as nib
+from scipy.ndimage import zoom
 ##################################
 
 import warnings
@@ -570,6 +571,14 @@ with torch.no_grad(): #disabling gradient calculation
 
             # Convert tensors to numpy arrays
             output_array = test_outputs.cpu().numpy()[j, 0] #The output_array is generated for each item in the batch, and then saved individually.
+
+            # Check and resize if necessary
+            raw_image_path = test_files[i * test_outputs.shape[0] + j]["raw"]
+            raw_image = nib.load(raw_image_path).get_fdata()
+            if output_array.shape != raw_image.shape:
+                zoom_factors = np.array(raw_image.shape) / np.array(output_array.shape)
+                output_array = zoom(output_array, zoom_factors, order=1) # order=1 for bilinear interpolation
+
 
             # Save output as NIfTI file
             output_nifti_path = os.path.join(output_nifti_dir, new_file_name)
