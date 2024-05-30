@@ -49,6 +49,7 @@ import random
 import json
 import csv
 import pandas as pd
+import nibabel as nib
 ##################################
 
 import warnings
@@ -106,6 +107,11 @@ loss_function_name = "MixedLoss"
 run_folder_name = f"run_{slurm_job_id}__{loss_function_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
+##################################
+
+# Define directory to save NIfTI files
+output_nifti_dir = os.path.join(run_dir, "Model_outputs_nifti")
+os.makedirs(output_nifti_dir, exist_ok=True)
 
 ##################################
 #mixed loss_function
@@ -539,9 +545,10 @@ print(
 print("-" * 40)
 print("FINAL STEP: Evaluate on test dataset")
 model.eval()
-with torch.no_grad(): ##disabling gradient calculation
+with torch.no_grad(): #disabling gradient calculation
     test_metric = DiceMetric(include_background=True, reduction="mean") #defining the test_metric-CLASS (NOT an object)
-    for test_data in test_loader:
+    #for test_data in test_loader:
+    for i, test_data in enumerate(test_loader): #to keep track of which file is being processed
         test_inputs, test_labels = (
             test_data["image"].to(device),
             test_data["label"].to(device),
@@ -554,18 +561,37 @@ with torch.no_grad(): ##disabling gradient calculation
             test_outputs = (test_outputs > 0.5).float() # Thresholding probabilities to binary values
             test_labels[test_labels > 0] = 1
 
-        #to ensure data shapes and types match the expected:
-        print("Test outputs shape:", test_outputs.shape)
-        print("Test labels shape:", test_labels.shape)
-        print("Test outputs unique values:", torch.unique(test_outputs))
-        print("Test labels unique values:", torch.unique(test_labels))
+        # Iterate over the batch and save each output individually
+        for j in range(test_outputs.shape[0]): #iterates over each item in the batch (test_outputs.shape[0])
+            # Extract original file path to generate the new file name
+            original_file_path = test_files[i * test_outputs.shape[0] + j]["raw"]
+            original_file_name = os.path.basename(original_file_path)
+            new_file_name = original_file_name.replace("raw", "test").replace("bg", "test").replace("gt", "test")
 
-        #Computes Dice metrics on testing data.
-        test_metric(y_pred=test_outputs, y=test_labels)
+            # Convert tensors to numpy arrays
+            output_array = test_outputs.cpu().numpy()[j, 0] #The output_array is generated for each item in the batch, and then saved individually.
 
-    test_metric_value = test_metric.aggregate().item() ##This line computes the average Dice score across all batches processed so far.
+            # Save output as NIfTI file
+            output_nifti_path = os.path.join(output_nifti_dir, new_file_name)
+            output_nifti = nib.Nifti1Image(output_array, np.eye(4))
+            nib.save(output_nifti, output_nifti_path)
+        
+        
+            #to ensure data shapes and types match the expected:
+            print(f"Test output {j} shape:", test_outputs[j].shape)
+            print(f"Test label {j} shape:", test_labels[j].shape)
+            print(f"Test output {j} unique values:", torch.unique(test_outputs[j]))
+            print(f"Test label {j} unique values:", torch.unique(test_labels[j]))
+
+            #Computes Dice metrics on testing data.
+            test_metric(y_pred=test_outputs, y=test_labels)
+
+    test_metric_value = test_metric.aggregate().item() #This line computes the average Dice score across all batches processed so far.
     test_metric.reset() ##Resets the metric computation to start fresh for the next epoch.
     print(f"Test Mean Dice: {test_metric_value:.10f}")
+
+
+print(f"NIfTI files saved to {output_nifti_dir}")
 print("-" * 40)
 ##################################
 # Prepare data for CSV using Pandas
