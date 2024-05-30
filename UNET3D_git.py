@@ -94,11 +94,26 @@ runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
 os.makedirs(runs_dir, exist_ok=True)
 ##################################
 
-loss_function_name = "DiceCELoss"
+loss_function_name = "MixedLoss"
 run_folder_name = f"run_{slurm_job_id}__{loss_function_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
 
+##################################
+#mixed loss_function
+
+class MixedLoss(torch.nn.Module):
+    def __init__(self, weight_bce=0.5, weight_dice=0.5):
+        super(MixedLoss, self).__init__()
+        self.bce = BCEWithLogitsLoss()
+        self.dice = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True)
+        self.weight_bce = weight_bce
+        self.weight_dice = weight_dice
+
+    def forward(self, inputs, targets):
+        bce_loss = self.bce(inputs, targets)
+        dice_loss = self.dice(inputs, targets)
+        return self.weight_bce * bce_loss + self.weight_dice * dice_loss
 ##################################
 # Variable to choose the dataset
 dataset_choice = dataset_choice
@@ -344,11 +359,11 @@ print("Create Loss")
 #You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
 #loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceLoss #try softmax #CHANGE
 #loss_function = BCEWithLogitsLoss() #PyTorch - binary crossentropy loss COMBINED with a sigmoid layer --> more numerically stable
-loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
-#loss_function = MixedLoss() #PyTorch & MONAI - MIXED loss: 0.5
+#loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
+loss_function = MixedLoss(weight_bce=0.5, weight_dice=0.5) #PyTorch & MONAI - MIXED loss: 0.5
 
 
-loss_function_name = "DiceCELoss"
+loss_function_name = "MixedLoss"
 
 ##################################
 print("Create Optimizer ")
