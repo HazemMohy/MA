@@ -395,7 +395,7 @@ for epoch in range(max_epochs):
         #Mixed Precision Training: Utilizes GPU capabilities for faster and memory-efficient training.
         with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
             outputs = model(inputs)
-            loss = loss_function(outputs, labels) # BCEWithLogitsLoss expects both outputs and labels to be of floating-point type. --> labels.float()
+            loss = loss_function(outputs, labels.float()) # BCEWithLogitsLoss expects both outputs and labels to be of floating-point type. --> labels.float()
         scaler.scale(loss).backward() #check scaler?!
         scaler.step(optimizer)
         scaler.update()
