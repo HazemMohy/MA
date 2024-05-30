@@ -103,7 +103,7 @@ runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
 os.makedirs(runs_dir, exist_ok=True)
 ##################################
 
-loss_function_name = "MixedLoss"
+loss_function_name = "DiceCELoss_ITK_Snap"
 run_folder_name = f"run_{slurm_job_id}__{loss_function_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
@@ -373,11 +373,11 @@ print("Create Loss")
 #You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
 #loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceLoss #try softmax #CHANGE
 #loss_function = BCEWithLogitsLoss() #PyTorch - binary crossentropy loss COMBINED with a sigmoid layer --> more numerically stable
-#loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
-loss_function = MixedLoss(weight_bce=0.5, weight_dice=0.5) #PyTorch & MONAI - MIXED loss: 0.5
+loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
+#loss_function = MixedLoss(weight_bce=0.5, weight_dice=0.5) #PyTorch & MONAI - MIXED loss: 0.5
 
 
-loss_function_name = "MixedLoss"
+loss_function_name = "DiceCELoss_ITK_Snap"
 
 ##################################
 print("Create Optimizer ")
