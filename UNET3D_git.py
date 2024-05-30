@@ -36,6 +36,7 @@ from monai.config import print_config
 from monai.apps import download_and_extract
 from monai.optimizers import Novograd
 import torch
+from torch.nn import BCEWithLogitsLoss
 torch.multiprocessing.set_sharing_strategy('file_system') #????????????
 import sys
 import matplotlib
@@ -338,7 +339,11 @@ print("Create Loss")
 #OneHotEncoding is a type of feature encoding which is turning values within your dataset(even images) into numbers, bec. ML-model requires all values to be numerical
 #sigmoid=True: Applies a sigmoid activation to the network outputs before computing the loss. The sigmoid function maps the network outputs to the range [0, 1], which is suitable for binary and multi-class segmentation tasks. Converts logits (raw output values from the network) into probabilities.
 #You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
-loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #try softmax #try another loss function(binary cross entropy loss) #CHANGE
+#loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceLoss#try softmax #CHANGE
+#loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
+loss_function = BCEWithLogitsLoss() #PyTorch - binary crossentropy loss COMBINED with a sigmoid layer --> more numerically stable
+#loss_function = BCEWithLogitsLoss() #PyTorch - PURE binary crossentropy loss
+#loss_function = BCEWithLogitsLoss() #PyTorch & MONAI - MIXED loss: 0.5
 
 ##################################
 print("Create Optimizer ")
@@ -386,7 +391,7 @@ for epoch in range(max_epochs):
         #Mixed Precision Training: Utilizes GPU capabilities for faster and memory-efficient training.
         with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
             outputs = model(inputs)
-            loss = loss_function(outputs, labels)
+            loss = loss_function(outputs, labels) # BCEWithLogitsLoss expects both outputs and labels to be of floating-point type. --> labels.float()
         scaler.scale(loss).backward() #check scaler?!
         scaler.step(optimizer)
         scaler.update()
