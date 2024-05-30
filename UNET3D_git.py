@@ -36,7 +36,7 @@ from monai.config import print_config
 from monai.apps import download_and_extract
 from monai.optimizers import Novograd
 import torch
-from torch.nn import BCEWithLogitsLoss
+from torch.nn import BCEWithLogitsLoss, BCELoss
 torch.multiprocessing.set_sharing_strategy('file_system') #????????????
 import sys
 import matplotlib
@@ -70,8 +70,8 @@ learning_rate = hyperparameters["learning_rate"]
 max_epochs = hyperparameters["max_epochs"]
 
 # Conditional batch size and val_interval based on max_epochs
-if max_epochs == 100: 
-    batch_size = 8 #immer 4 #noch höher
+if max_epochs == 10: 
+    batch_size = 2 #immer 8
     val_interval = 5
 elif max_epochs == 1000:
     batch_size = 8
@@ -92,10 +92,13 @@ os.makedirs(tracking_dir, exist_ok=True)
 
 runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
 os.makedirs(runs_dir, exist_ok=True)
+##################################
 
-run_folder_name = f"run_{slurm_job_id}"
+loss_function_name = "BCEWithLogitsLoss"
+run_folder_name = f"run_{slurm_job_id}__{loss_function_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
+
 ##################################
 # Variable to choose the dataset
 dataset_choice = dataset_choice
@@ -344,6 +347,7 @@ print("Create Loss")
 loss_function = BCEWithLogitsLoss() #PyTorch - binary crossentropy loss COMBINED with a sigmoid layer --> more numerically stable
 #loss_function = BCEWithLogitsLoss() #PyTorch - PURE binary crossentropy loss
 #loss_function = BCEWithLogitsLoss() #PyTorch & MONAI - MIXED loss: 0.5
+loss_function_name = "BCEWithLogitsLoss"
 
 ##################################
 print("Create Optimizer ")
