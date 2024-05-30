@@ -629,8 +629,6 @@ print(f"Batch Size: {batch_size}")
 print(f"Validation Interval: {val_interval}")
 print(f"Number of Workers: {num_workers}")
 ##################################
-
-
 #final print
 print("-" * 40)
 print("ALL DONE!") 
