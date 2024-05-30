@@ -374,6 +374,12 @@ post_pred = AsDiscrete(argmax=True, to_onehot=2, n_classes=2) # argmax turns val
 post_label = AsDiscrete(to_onehot=2, n_classes=2) 
 #both post_pred and post_label are eliminated = NOT used!!
 ##################################
+#Clear CUDA cache to free up memory before starting the training loop
+#This ensures that any residual memory from previous operations is freed up.
+#This setup should help in mitigating the out-of-memory error.
+import torch
+torch.cuda.empty_cache()
+
 
 for epoch in range(max_epochs):
     print("-" * 40)
