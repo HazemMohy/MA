@@ -342,11 +342,12 @@ print("Create Loss")
 #OneHotEncoding is a type of feature encoding which is turning values within your dataset(even images) into numbers, bec. ML-model requires all values to be numerical
 #sigmoid=True: Applies a sigmoid activation to the network outputs before computing the loss. The sigmoid function maps the network outputs to the range [0, 1], which is suitable for binary and multi-class segmentation tasks. Converts logits (raw output values from the network) into probabilities.
 #You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
-#loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceLoss#try softmax #CHANGE
-#loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
+#loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceLoss #try softmax #CHANGE
 loss_function = BCEWithLogitsLoss() #PyTorch - binary crossentropy loss COMBINED with a sigmoid layer --> more numerically stable
-#loss_function = BCEWithLogitsLoss() #PyTorch - PURE binary crossentropy loss
-#loss_function = BCEWithLogitsLoss() #PyTorch & MONAI - MIXED loss: 0.5
+#loss_function = BCELoss() #PyTorch - PURE binary crossentropy loss
+#loss_function = MixedLoss() #PyTorch & MONAI - MIXED loss: 0.5
+#loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
+
 loss_function_name = "BCEWithLogitsLoss"
 
 ##################################
