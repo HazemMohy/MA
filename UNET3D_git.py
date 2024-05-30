@@ -609,6 +609,19 @@ shutil.copy(slurm_error_file, run_slurm_error_file)
 print(f"Slurm output file copied to {run_slurm_output_file}")
 print(f"Slurm error file copied to {run_slurm_error_file}")
 ##################################
+
+#Hyperparameters Confirmation
+print("-" * 40)
+
+print(f"Dataset Choice: {dataset_choice}")
+print(f"Learning Rate: {learning_rate}")
+print(f"Max Epochs: {max_epochs}")
+print(f"Batch Size: {batch_size}")
+print(f"Validation Interval: {val_interval}")
+print(f"Number of Workers: {num_workers}")
+##################################
+
+
 #final print
 print("-" * 40)
 print("ALL DONE!") 
