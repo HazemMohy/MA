@@ -71,10 +71,10 @@ max_epochs = hyperparameters["max_epochs"]
 
 # Conditional batch size and val_interval based on max_epochs
 if max_epochs == 100: 
-    batch_size = 8 #immer 8
+    batch_size = 4 #immer 8
     val_interval = 5
 elif max_epochs == 1000:
-    batch_size = 8
+    batch_size = 4
     val_interval = 20
 ##################################
 #Defining the directories
@@ -344,11 +344,11 @@ print("Create Loss")
 #You can NOT apply DiceMetric instead of DiceLoss. DiceMetric is NOT designed to calculate the losses, bus as a metric for the evaluation!
 #loss_function = DiceLoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceLoss #try softmax #CHANGE
 loss_function = BCEWithLogitsLoss() #PyTorch - binary crossentropy loss COMBINED with a sigmoid layer --> more numerically stable
-#loss_function = BCELoss() #PyTorch - PURE binary crossentropy loss
+#loss_function = BCELoss() #PyTorch - PURE binary crossentropy loss #The key difference is that BCELoss expects the inputs to be probabilities (i.e., the outputs of a sigmoid function), not logits; Line 404
 #loss_function = MixedLoss() #PyTorch & MONAI - MIXED loss: 0.5
 #loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
 
-loss_function_name = "BCEWithLogitsLoss"
+loss_function_name = "BCEWithLogitsLos"
 
 ##################################
 print("Create Optimizer ")
@@ -402,6 +402,8 @@ for epoch in range(max_epochs):
         #Mixed Precision Training: Utilizes GPU capabilities for faster and memory-efficient training.
         with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
             outputs = model(inputs)
+            #for BCELoss: You need to apply the sigmoid activation function to the outputs before passing them to BCELoss.
+            #outputs = torch.sigmoid(outputs)  # Apply sigmoid to the outputs
             #loss = loss_function(outputs, labels) #for DiecLoss
             loss = loss_function(outputs, labels.float()) # BCEWithLogitsLoss expects both outputs (already is float) and labels to be of floating-point type. --> labels.float()
         scaler.scale(loss).backward() #check scaler?!
