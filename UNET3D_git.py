@@ -88,7 +88,7 @@ scheduler_info = f"Scheduler: {scheduler_params['type']}" if scheduler_params el
 
 #Hyperparameters Confirmation
 print(f"Dataset Choice: {dataset_choice}")
-print(f"Learning Rate: {learning_rate}, with the scheduler: {scheduler_info}")
+print(f"Learning Rate: {learning_rate}, with {scheduler_info}")
 print(f"Max Epochs: {max_epochs}")
 print(f"Batch Size: {batch_size}")
 print(f"Validation Interval: {val_interval}")
