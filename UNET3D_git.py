@@ -51,7 +51,7 @@ import csv
 import pandas as pd
 import nibabel as nib
 from scipy.ndimage import zoom
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
 ##################################
 
 import warnings
@@ -405,12 +405,29 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #patience=5: Number of epochs with no improvement after which the learning rate will be reduced.
 #factor=0.5: Factor by which the learning rate will be reduced. new_lr = old_lr * factor.
 #verbose=True: If True, prints a message to stdout for each update. --> so I do NOT really need the print-statements!
-scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True) 
+# Define scheduler based on the JSON configuration
+if scheduler_params:
+    if scheduler_params["type"] == "CosineAnnealingLR":
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=scheduler_params["params"]["T_max"], 
+                                                   eta_min=scheduler_params["params"]["eta_min"],
+                                                   verbose=scheduler_params["params"]["verbose"])
+    elif scheduler_params["type"] == "RLOP":
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode=scheduler_params["params"]["mode"],
+                                                   patience=scheduler_params["params"]["patience"], 
+                                                   factor=scheduler_params["params"]["factor"], 
+                                                   verbose=scheduler_params["params"]["verbose"])
 
-if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-    print(f"The Scheduler {scheduler_info} will be used in the training loop!")
 else:
-    print("No Scheduler will be used in the training loop!")
+    scheduler = None
+
+
+
+#scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True) 
+
+#if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+#    print(f"The Scheduler {scheduler_info} will be used in the training loop!")
+#else:
+#    print("No Scheduler will be used in the training loop!")
 
 #GradScaler is used for mixed precision training, which allows for faster computation and reduced memory usage by using 16-bit (half-precision) floating-point numbers instead of the default 32-bit (single-precision).
 #GradScaler scales the loss before backpropagation to prevent gradients from becoming too small (underflow) or too large (overflow) in the 16-bit representation.
@@ -542,7 +559,8 @@ for epoch in range(max_epochs):
 
             #In the validation loop, after computing the validation metric, update the scheduler!
             #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
-            if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            #if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            if scheduler and isinstance(scheduler, lr_scheduler.ReduceLROnPlateau):
                 scheduler.step(metric)
                 current_lr = scheduler.optimizer.param_groups[0]['lr']
                 print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
