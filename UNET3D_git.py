@@ -405,9 +405,9 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True) 
 
 if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-        print(f"The Scheduler {scheduler_info} will be used in the training loop!")
-    else:
-        print("No Scheduler will be used in the training loop!")
+    print(f"The Scheduler {scheduler_info} will be used in the training loop!")
+else:
+    print("No Scheduler will be used in the training loop!")
 
 #GradScaler is used for mixed precision training, which allows for faster computation and reduced memory usage by using 16-bit (half-precision) floating-point numbers instead of the default 32-bit (single-precision).
 #GradScaler scales the loss before backpropagation to prevent gradients from becoming too small (underflow) or too large (overflow) in the 16-bit representation.
