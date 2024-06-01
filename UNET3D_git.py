@@ -104,7 +104,7 @@ runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
 os.makedirs(runs_dir, exist_ok=True)
 ##################################
 
-loss_function_name = "DiceCELoss_ITK_Snap"
+loss_function_name = "DiceCELoss_ITK_Snap_best_model"
 run_folder_name = f"run_{slurm_job_id}__{loss_function_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
@@ -378,7 +378,7 @@ loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=Tr
 #loss_function = MixedLoss(weight_bce=0.5, weight_dice=0.5) #PyTorch & MONAI - MIXED loss: 0.5
 
 
-loss_function_name = "DiceCELoss_ITK_Snap"
+loss_function_name = "DiceCELoss_ITK_Snap_best_model"
 
 ##################################
 print("Create Optimizer ")
