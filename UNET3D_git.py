@@ -51,6 +51,7 @@ import csv
 import pandas as pd
 import nibabel as nib
 from scipy.ndimage import zoom
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 ##################################
 
 import warnings
@@ -387,7 +388,10 @@ print("Create Optimizer ")
 learning_rate = learning_rate
 
 #model.parameters() provides the optimizer with the parameters of the model that need to be updated during training.
+#After defining the optimizer, add the scheduler definition
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
+#RLOP reduces the learning rate when a metric has stopped improving. This is useful because it allows the model to converge more effectively by lowering the learning rate when the training seems to stagnate.
+scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True) 
 
 #GradScaler is used for mixed precision training, which allows for faster computation and reduced memory usage by using 16-bit (half-precision) floating-point numbers instead of the default 32-bit (single-precision).
 #GradScaler scales the loss before backpropagation to prevent gradients from becoming too small (underflow) or too large (overflow) in the 16-bit representation.
@@ -505,6 +509,9 @@ for epoch in range(max_epochs):
                 f"\nbest mean dice: {best_metric:.10f} "
                 f"at epoch: {best_metric_epoch}"
             )
+
+            #In the validation loop, after computing the validation metric, update the scheduler!
+            scheduler.step(metric)
 
     #plots the training loss and validation Dice metrics over epochs.
     if (epoch + 1) % 1 == 0: # from %3 to %1, to see more!
