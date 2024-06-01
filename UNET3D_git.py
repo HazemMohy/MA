@@ -79,10 +79,13 @@ if max_epochs == 100:
 elif max_epochs == 1000:
     batch_size = 4
     val_interval = 20
+##################################
+#extract the scheduler type
+scheduler_info = f"Scheduler: {scheduler_params['type']}" if scheduler_params else "No Scheduler"
 
 #Hyperparameters Confirmation
 print(f"Dataset Choice: {dataset_choice}")
-print(f"Learning Rate: {learning_rate}")
+print(f"Learning Rate: {learning_rate}, {scheduler_info}")
 print(f"Max Epochs: {max_epochs}")
 print(f"Batch Size: {batch_size}")
 print(f"Validation Interval: {val_interval}")
@@ -387,11 +390,24 @@ print("Create Optimizer ")
 #A smaller learning rate can lead to more stable training but might require more epochs to converge.
 learning_rate = learning_rate
 
+# Initialize an empty set to store unique learning rates
+unique_learning_rates = set()
+
 #model.parameters() provides the optimizer with the parameters of the model that need to be updated during training.
 #After defining the optimizer, add the scheduler definition
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #RLOP reduces the learning rate when a metric has stopped improving. This is useful because it allows the model to converge more effectively by lowering the learning rate when the training seems to stagnate.
+#optimizer: The optimizer instance whose learning rate needs to be adjusted.
+#'min': Mode for the metric; 'min' means the learning rate will be reduced when the monitored quantity (e.g., validation loss) has stopped decreasing.
+#patience=5: Number of epochs with no improvement after which the learning rate will be reduced.
+#factor=0.5: Factor by which the learning rate will be reduced. new_lr = old_lr * factor.
+#verbose=True: If True, prints a message to stdout for each update. --> so I do NOT really need the print-statements!
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True) 
+
+if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+        print(f"The Scheduler {scheduler_info} will be used in the training loop!")
+    else:
+        print("No Scheduler will be used in the training loop!")
 
 #GradScaler is used for mixed precision training, which allows for faster computation and reduced memory usage by using 16-bit (half-precision) floating-point numbers instead of the default 32-bit (single-precision).
 #GradScaler scales the loss before backpropagation to prevent gradients from becoming too small (underflow) or too large (overflow) in the 16-bit representation.
@@ -446,6 +462,17 @@ for epoch in range(max_epochs):
         print(
             f"{step}/{len(train_ds) // train_loader.batch_size}, "
             f"train_loss: {loss.item():.4f}")
+
+    # Update the learning rate using the scheduler if available
+    #The reason for this if-check is that ReduceLROnPlateau scheduler steps based on validation metrics rather than epoch count, so we don't want to call scheduler.step() for ReduceLROnPlateau in the training loop.
+    #Only for logging the learning rates of schedulers that step per epoch
+    if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+        scheduler.step()
+        #scheduler.get_last_lr(): Returns a list of the last computed learning rates by the scheduler. This is a list because PyTorch optimizers can have multiple parameter groups, each with its own learning rate.
+        #[0]: Assumes that there is only one parameter group in the optimizer. If you have multiple parameter groups, you would need to handle each one appropriately.
+        current_lr = scheduler.get_last_lr()[0]  # Assuming only one param group 
+        print(f"Current Learning Rate after epoch {epoch + 1}: {current_lr}")
+        unique_learning_rates.add(current_lr)
 
 
     epoch_loss /= step
@@ -511,9 +538,15 @@ for epoch in range(max_epochs):
             )
 
             #In the validation loop, after computing the validation metric, update the scheduler!
-            scheduler.step(metric)
+            #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
+            if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(metric)
+                current_lr = scheduler.optimizer.param_groups[0]['lr']
+                print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
+                unique_learning_rates.add(current_lr)
 
     #plots the training loss and validation Dice metrics over epochs.
+    print("Creating the Plots!")
     if (epoch + 1) % 1 == 0: # from %3 to %1, to see more!
         print("Plot the loss and metric")
         
@@ -544,7 +577,13 @@ for epoch in range(max_epochs):
         torch.save(model.state_dict(), latest_model_path)
         print(f"Saved the latest model state to {latest_model_path}")
 
+# Print the unique learning rates used
+print("-" * 40)
+print("Unique Learning Rates used during training:", sorted(unique_learning_rates))
+
+
 #prints a summary message with the best metric achieved and the corresponding epoch.
+print("-" * 40)
 print(
     f"train completed, best_metric: {best_metric:.4f} "
     f"at epoch: {best_metric_epoch}") 
