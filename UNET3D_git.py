@@ -80,12 +80,15 @@ elif max_epochs == 1000:
     batch_size = 4
     val_interval = 20
 ##################################
+# Extract scheduler parameters if present
+scheduler_params = hyperparameters.get("scheduler", None)
+
 #extract the scheduler type
 scheduler_info = f"Scheduler: {scheduler_params['type']}" if scheduler_params else "No Scheduler"
 
 #Hyperparameters Confirmation
 print(f"Dataset Choice: {dataset_choice}")
-print(f"Learning Rate: {learning_rate}, {scheduler_info}")
+print(f"Learning Rate: {learning_rate}, with the scheduler: {scheduler_info}")
 print(f"Max Epochs: {max_epochs}")
 print(f"Batch Size: {batch_size}")
 print(f"Validation Interval: {val_interval}")
