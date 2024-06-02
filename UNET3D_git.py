@@ -83,8 +83,11 @@ elif max_epochs == 1000:
 # Extract scheduler parameters if present
 scheduler_params = hyperparameters.get("scheduler", None)
 
-#extract the scheduler type
-scheduler_info = f"Scheduler: {scheduler_params['type']}" if scheduler_params else "No Scheduler"
+# Choose which scheduler to use
+chosen_scheduler = scheduler_params.get("scheduler_cosinA")  # Change to "scheduler_RLOP" to use the other scheduler
+
+#extract the scheduler type for logging
+scheduler_info = f"Scheduler: {chosen_scheduler['type']}" if chosen_scheduler else "No Scheduler"
 
 #Hyperparameters Confirmation
 print(f"Dataset Choice: {dataset_choice}")
@@ -412,16 +415,16 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True)
 
 # Define scheduler based on the JSON configuration
-if scheduler_params:
-    if scheduler_params["type"] == "cosinA":
-        scheduler = CosineAnnealingLR(optimizer, T_max=scheduler_params["params"]["T_max"], 
-                                                   eta_min=scheduler_params["params"]["eta_min"],
-                                                   verbose=scheduler_params["params"]["verbose"])
-    elif scheduler_params["type"] == "RLOP":
-        scheduler = ReduceLROnPlateau(optimizer, mode=scheduler_params["params"]["mode"],
-                                                   patience=scheduler_params["params"]["patience"], 
-                                                   factor=scheduler_params["params"]["factor"], 
-                                                   verbose=scheduler_params["params"]["verbose"])
+if chosen_scheduler:
+    if chosen_scheduler["type"] == "cosinA":
+        scheduler = CosineAnnealingLR(optimizer, T_max=chosen_scheduler["params"]["T_max"], 
+                                                   eta_min=chosen_scheduler["params"]["eta_min"],
+                                                   verbose=chosen_scheduler["params"]["verbose"])
+    elif chosen_scheduler["type"] == "RLOP":
+        scheduler = ReduceLROnPlateau(optimizer, mode=chosen_scheduler["params"]["mode"],
+                                                   patience=chosen_scheduler["params"]["patience"], 
+                                                   factor=chosen_scheduler["params"]["factor"], 
+                                                   verbose=chosen_scheduler["params"]["verbose"])
 else:
     scheduler = None
 
