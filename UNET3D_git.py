@@ -399,35 +399,41 @@ unique_learning_rates = set()
 #model.parameters() provides the optimizer with the parameters of the model that need to be updated during training.
 #After defining the optimizer, add the scheduler definition
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
+
+
 #RLOP reduces the learning rate when a metric has stopped improving. This is useful because it allows the model to converge more effectively by lowering the learning rate when the training seems to stagnate.
 #optimizer: The optimizer instance whose learning rate needs to be adjusted.
 #'min': Mode for the metric; 'min' means the learning rate will be reduced when the monitored quantity (e.g., validation loss) has stopped decreasing.
 #patience=5: Number of epochs with no improvement after which the learning rate will be reduced.
 #factor=0.5: Factor by which the learning rate will be reduced. new_lr = old_lr * factor.
 #verbose=True: If True, prints a message to stdout for each update. --> so I do NOT really need the print-statements!
+
+
+#scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True)
+
 # Define scheduler based on the JSON configuration
 if scheduler_params:
-    if scheduler_params["type"] == "CosineAnnealingLR":
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=scheduler_params["params"]["T_max"], 
+    if scheduler_params["type"] == "cosinA":
+        scheduler = CosineAnnealingLR(optimizer, T_max=scheduler_params["params"]["T_max"], 
                                                    eta_min=scheduler_params["params"]["eta_min"],
                                                    verbose=scheduler_params["params"]["verbose"])
     elif scheduler_params["type"] == "RLOP":
-        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode=scheduler_params["params"]["mode"],
+        scheduler = ReduceLROnPlateau(optimizer, mode=scheduler_params["params"]["mode"],
                                                    patience=scheduler_params["params"]["patience"], 
                                                    factor=scheduler_params["params"]["factor"], 
                                                    verbose=scheduler_params["params"]["verbose"])
-
 else:
     scheduler = None
 
+if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.CosineAnnealingLR):
+    print(f"The Scheduler {scheduler_info} will be used in the training loop!")
+else:
+    print("No Scheduler will be used in the training loop!")
 
-
-#scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True) 
-
-#if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-#    print(f"The Scheduler {scheduler_info} will be used in the training loop!")
-#else:
-#    print("No Scheduler will be used in the training loop!")
+if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+    print(f"The Scheduler {scheduler_info} will be used in the validation loop!")
+else:
+    print("No Scheduler will be used in the validation loop!")
 
 #GradScaler is used for mixed precision training, which allows for faster computation and reduced memory usage by using 16-bit (half-precision) floating-point numbers instead of the default 32-bit (single-precision).
 #GradScaler scales the loss before backpropagation to prevent gradients from becoming too small (underflow) or too large (overflow) in the 16-bit representation.
@@ -556,15 +562,27 @@ for epoch in range(max_epochs):
                 f"\nbest mean dice: {best_metric:.10f} "
                 f"at epoch: {best_metric_epoch}"
             )
+            ##############
+            if metric > best_metric:
+                best_metric = metric
+                best_metric_epoch = epoch + 1
+                best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+                torch.save(model.state_dict(), best_model_path)
+                print("Saved new best metric model at:", best_model_path)
+            print(
+                f"current epoch: {epoch + 1} current mean dice: {metric:.10f}"
+                f"\nbest mean dice: {best_metric:.10f} "
+                f"at epoch: {best_metric_epoch}"
+            )
 
-            #In the validation loop, after computing the validation metric, update the scheduler!
-            #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
-            #if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-            if scheduler and isinstance(scheduler, lr_scheduler.ReduceLROnPlateau):
-                scheduler.step(metric)
-                current_lr = scheduler.optimizer.param_groups[0]['lr']
-                print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
-                unique_learning_rates.add(current_lr)
+        #In the validation loop, after computing the validation metric, update the scheduler based on validation metric!
+        #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
+        #if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+        if scheduler and isinstance(scheduler, lr_scheduler.ReduceLROnPlateau):
+            scheduler.step(metric)
+            current_lr = scheduler.optimizer.param_groups[0]['lr']
+            print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
+            unique_learning_rates.add(current_lr)
 
     #plots the training loss and validation Dice metrics over epochs.
     print("Creating the Plots!")
