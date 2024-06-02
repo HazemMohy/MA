@@ -3,12 +3,22 @@
     "learning_rate": 0.0001,
     "max_epochs": 1000,
     "scheduler": {
-        "type": "RLOP",
-        "params": {
-            "mode": "min",
-            "patience": 5,
-            "factor": 0.5,
-            "verbose": true
+        "scheduler_RLOP": {
+            "type": "RLOP",
+            "params": {
+                "mode": "min",
+                "patience": 5,
+                "factor": 0.5,
+                "verbose": true
+            }
+        },
+        "scheduler_cosinA": {
+            "type": "cosinA",
+            "params": {
+                "T_max": 50,
+                "eta_min": 1e-6,
+                "verbose": true
+            }
         }
     }
 }
