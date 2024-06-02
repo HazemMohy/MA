@@ -438,12 +438,12 @@ else:
     scheduler = None
 
 if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.CosineAnnealingLR):
-    print(f"The Scheduler {scheduler_info} will be used in the training loop!")
+    print(f"The {scheduler_info} will be used in the training loop!")
 else:
     print("No Scheduler will be used in the training loop!")
 
 if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-    print(f"The Scheduler {scheduler_info} will be used in the validation loop!")
+    print(f"The {scheduler_info} will be used in the validation loop!")
 else:
     print("No Scheduler will be used in the validation loop!")
 
