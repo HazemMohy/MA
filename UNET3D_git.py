@@ -83,8 +83,11 @@ elif max_epochs == 1000:
 # Extract scheduler parameters if present
 scheduler_params = hyperparameters.get("scheduler", None)
 
-# Choose which scheduler to use
-chosen_scheduler = scheduler_params.get("scheduler_cosinA")  # Change to "scheduler_RLOP" to use the other scheduler
+# Extract the chosen scheduler from the hyperparameters
+chosen_scheduler_name = hyperparameters.get("chosen_scheduler", None)
+
+# Choose which scheduler to use based on the chosen_scheduler parameter
+chosen_scheduler = scheduler_params.get(chosen_scheduler_name) if scheduler_params and chosen_scheduler_name else None
 
 #extract the scheduler type for logging
 scheduler_info = f"Scheduler: {chosen_scheduler['type']}" if chosen_scheduler else "No Scheduler"
@@ -114,8 +117,8 @@ runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
 os.makedirs(runs_dir, exist_ok=True)
 ##################################
 
-loss_function_name = "DiceCELoss_RLOP"
-run_folder_name = f"run_{slurm_job_id}__{loss_function_name}"
+loss_function_name = "DiceCELoss"
+run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
 ##################################
