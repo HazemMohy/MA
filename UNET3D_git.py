@@ -575,7 +575,7 @@ for epoch in range(max_epochs):
         #In the validation loop, after computing the validation metric, update the scheduler based on validation metric!
         #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
         #if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-        if scheduler and isinstance(scheduler, lr_scheduler.ReduceLROnPlateau):
+        if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
             scheduler.step(metric)
             current_lr = scheduler.optimizer.param_groups[0]['lr']
             print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
