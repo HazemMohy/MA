@@ -491,8 +491,8 @@ for epoch in range(max_epochs):
 
     # Update the learning rate using the scheduler if available
     #The reason for this if-check is that ReduceLROnPlateau scheduler steps based on validation metrics rather than epoch count, so we don't want to call scheduler.step() for ReduceLROnPlateau in the training loop.
-    #Only for logging the learning rates of schedulers that step per epoch
-    if scheduler and not isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+    #Only for logging the learning rates of schedulers that step per epoch --> CosineAnnealingLR steps based on epoch, so it should be called at the end of each epoch in the training loop.
+    if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.CosineAnnealingLR):
         scheduler.step()
         #scheduler.get_last_lr(): Returns a list of the last computed learning rates by the scheduler. This is a list because PyTorch optimizers can have multiple parameter groups, each with its own learning rate.
         #[0]: Assumes that there is only one parameter group in the optimizer. If you have multiple parameter groups, you would need to handle each one appropriately.
