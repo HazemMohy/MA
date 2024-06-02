@@ -492,6 +492,10 @@ for epoch in range(max_epochs):
             f"{step}/{len(train_ds) // train_loader.batch_size}, "
             f"train_loss: {loss.item():.4f}")
 
+    epoch_loss /= step
+    epoch_loss_values.append(epoch_loss) #Logs the average loss for each epoch.
+    print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+
     # Update the learning rate using the scheduler if available
     #The reason for this if-check is that ReduceLROnPlateau scheduler steps based on validation metrics rather than epoch count, so we don't want to call scheduler.step() for ReduceLROnPlateau in the training loop.
     #Only for logging the learning rates of schedulers that step per epoch --> CosineAnnealingLR steps based on epoch, so it should be called at the end of each epoch in the training loop.
@@ -502,12 +506,6 @@ for epoch in range(max_epochs):
         current_lr = scheduler.get_last_lr()[0]  # Assuming only one param group 
         print(f"Current Learning Rate after epoch {epoch + 1}: {current_lr}")
         unique_learning_rates.add(current_lr)
-
-
-    epoch_loss /= step
-    epoch_loss_values.append(epoch_loss) #Logs the average loss for each epoch.
-    print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
-
 
     if (epoch + 1) % val_interval == 0:
         model.eval()
@@ -550,22 +548,9 @@ for epoch in range(max_epochs):
             metric = dice_metric.aggregate().item() #this line is giving us the average DiceScore for the epoch without having to manually add the individual scores then dividing them by the length/Abzahl of the whole
             #Resets the metric computation to start fresh for the next epoch.
             dice_metric.reset()
-            
+            metric_values.append(metric)
             
             #Logs and saves the best model based on validation performance
-            metric_values.append(metric)
-            if metric > best_metric:
-                best_metric = metric
-                best_metric_epoch = epoch + 1
-                best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
-                torch.save(model.state_dict(), best_model_path)
-                print("Saved new best metric model at:", best_model_path)
-            print(
-                f"current epoch: {epoch + 1} current mean dice: {metric:.10f}"
-                f"\nbest mean dice: {best_metric:.10f} "
-                f"at epoch: {best_metric_epoch}"
-            )
-            ##############
             if metric > best_metric:
                 best_metric = metric
                 best_metric_epoch = epoch + 1
