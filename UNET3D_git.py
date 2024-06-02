@@ -414,6 +414,12 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #factor=0.5: Factor by which the learning rate will be reduced. new_lr = old_lr * factor.
 #verbose=True: If True, prints a message to stdout for each update. --> so I do NOT really need the print-statements!
 
+#cosinA implements a learning rate schedule that follows the cosine function, gradually reducing the learning rate over time.
+#T_max: After T_max iterations, the learning rate will reach its minimum value (eta_min) and then the cycle can repeat if restarts are enabled (though restarts are not part of the basic CosineAnnealingLR and would require using CosineAnnealingWarmRestarts instead).
+#Example: If T_max is set to 50, the learning rate will decrease from its initial value to eta_min following a cosine curve over 50 epochs.
+#eta_min: Definition: Minimum learning rate. Purpose: This is the lowest value the learning rate will reach during the annealing process. It ensures that the learning rate does not drop to zero, which can be undesirable as it would stop the learning process completely.
+#verbose: If set to True, this will print messages indicating the learning rate adjustments. This can be helpful for debugging and understanding how the learning rate is changing over time.  If verbose is True, you will see output messages showing the learning rate changes at each step.
+
 
 #scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True)
 
