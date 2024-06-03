@@ -10,6 +10,8 @@
                 "mode": "min",
                 "patience": 5,
                 "factor": 0.5,
+                "verbose": true,
+                "threshold": 1e-4 ,
                 "verbose": true
             }
         },
