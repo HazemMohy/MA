@@ -51,7 +51,7 @@ import csv
 import pandas as pd
 import nibabel as nib
 from scipy.ndimage import zoom
-from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarm
 ##################################
 
 import warnings

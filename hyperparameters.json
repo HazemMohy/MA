@@ -1,8 +1,8 @@
 {
-    "dataset_choice": "2x",
+    "dataset_choice": "4x",
     "learning_rate": 0.0001,
     "max_epochs": 1000,
-    "chosen_scheduler": "scheduler_cosinA",
+    "chosen_scheduler": "scheduler_cosinAWR",
     "scheduler": {
         "scheduler_RLOP": {
             "type": "RLOP",
@@ -20,8 +20,19 @@
                 "eta_min": 1e-6,
                 "verbose": true
             }
+        },
+        "scheduler_cosinAWR": {
+            "type": "cosinAWR",
+            "params": {
+                "T_0": 50,
+                "T_mult": 2,
+                "eta_min": 1e-6,
+                "verbose": true
+            }
         }
     }
+    
 }
+
 
 
