@@ -51,7 +51,7 @@ import csv
 import pandas as pd
 import nibabel as nib
 from scipy.ndimage import zoom
-from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarm
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts
 ##################################
 
 import warnings
@@ -434,10 +434,16 @@ if chosen_scheduler:
                                                    patience=chosen_scheduler["params"]["patience"], 
                                                    factor=chosen_scheduler["params"]["factor"], 
                                                    verbose=chosen_scheduler["params"]["verbose"])
+    elif chosen_scheduler["type"] == "cosinAWR":
+        scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=chosen_scheduler["params"]["T_0"],
+                                                T_mult=chosen_scheduler["params"]["T_mult"],
+                                                eta_min=chosen_scheduler["params"]["eta_min"],
+                                                verbose=chosen_scheduler["params"]["verbose"])
 else:
     scheduler = None
 
-if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.CosineAnnealingLR):
+
+if scheduler and isinstance(scheduler, (torch.optim.lr_scheduler.CosineAnnealingLR, torch.optim.lr_scheduler.CosineAnnealingWarmRestarts)):
     print(f"The {scheduler_info} will be used in the training loop!")
 else:
     print("No Scheduler will be used in the training loop!")
@@ -508,7 +514,7 @@ for epoch in range(max_epochs):
     # Update the learning rate using the scheduler if available
     #The reason for this if-check is that ReduceLROnPlateau scheduler steps based on validation metrics rather than epoch count, so we don't want to call scheduler.step() for ReduceLROnPlateau in the training loop.
     #Only for logging the learning rates of schedulers that step per epoch --> CosineAnnealingLR steps based on epoch, so it should be called at the end of each epoch in the training loop.
-    if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.CosineAnnealingLR):
+    if scheduler and isinstance(scheduler, (torch.optim.lr_scheduler.CosineAnnealingLR, torch.optim.lr_scheduler.CosineAnnealingWarmRestarts)): #you can use OR as well, but you will then need a nested if which I don't want
         scheduler.step()
         #scheduler.get_last_lr(): Returns a list of the last computed learning rates by the scheduler. This is a list because PyTorch optimizers can have multiple parameter groups, each with its own learning rate.
         #[0]: Assumes that there is only one parameter group in the optimizer. If you have multiple parameter groups, you would need to handle each one appropriately.
