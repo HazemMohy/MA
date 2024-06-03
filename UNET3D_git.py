@@ -420,6 +420,11 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #eta_min: Definition: Minimum learning rate. Purpose: This is the lowest value the learning rate will reach during the annealing process. It ensures that the learning rate does not drop to zero, which can be undesirable as it would stop the learning process completely.
 #verbose: If set to True, this will print messages indicating the learning rate adjustments. This can be helpful for debugging and understanding how the learning rate is changing over time.  If verbose is True, you will see output messages showing the learning rate changes at each step.
 
+#cosinAWarmRestarts
+#T_0: Number of epochs for the first restart
+#T_mult: A factor that increases T_0 after each restart.
+#eta_min: Minimum learning rate after annealing.
+
 
 #scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True)
 
