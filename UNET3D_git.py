@@ -408,6 +408,7 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
 
 #RLOP reduces the learning rate when a metric has stopped improving. This is useful because it allows the model to converge more effectively by lowering the learning rate when the training seems to stagnate.
+#Using RLOP during validation ensures that the learning rate is reduced when the model's performance plateaus, allowing for finer adjustments based on actual validation performance.
 #optimizer: The optimizer instance whose learning rate needs to be adjusted.
 #'min': Mode for the metric; 'min' means the learning rate will be reduced when the monitored quantity (e.g., validation loss) has stopped decreasing.
 #patience=5: Number of epochs with no improvement after which the learning rate will be reduced.
@@ -420,7 +421,7 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #eta_min: Definition: Minimum learning rate. Purpose: This is the lowest value the learning rate will reach during the annealing process. It ensures that the learning rate does not drop to zero, which can be undesirable as it would stop the learning process completely.
 #verbose: If set to True, this will print messages indicating the learning rate adjustments. This can be helpful for debugging and understanding how the learning rate is changing over time.  If verbose is True, you will see output messages showing the learning rate changes at each step.
 
-#cosinAWarmRestarts
+#cosinAWarmRestarts provides periodic restarts which can help the model escape local minima and explore new regions of the loss landscape during training. This can be particularly beneficial in maintaining model momentum.
 #T_0: Number of epochs for the first restart
 #T_mult: A factor that increases T_0 after each restart.
 #eta_min: Minimum learning rate after annealing.
