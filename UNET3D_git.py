@@ -425,7 +425,7 @@ optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 #T_0: Number of epochs for the first restart
 #T_mult: A factor that increases T_0 after each restart.
 #eta_min: Minimum learning rate after annealing.
-
+print("Create Scheduler")
 
 #scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5, verbose=True)
 
