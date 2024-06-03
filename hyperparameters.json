@@ -2,7 +2,7 @@
     "dataset_choice": "2x",
     "learning_rate": 0.01,
     "max_epochs": 100,
-    "chosen_scheduler": "scheduler_cosinA,
+    "chosen_scheduler": "scheduler_cosinA",
     "scheduler": {
         "scheduler_RLOP": {
             "type": "RLOP",
