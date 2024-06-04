@@ -1,25 +1,25 @@
 {
     "dataset_choice": "4x",
-    "learning_rate": 0.01,
+    "learning_rate": 0.0001,
     "max_epochs": 1000,
-    "chosen_scheduler": "scheduler_cosinAWR",
+    "chosen_scheduler": "scheduler_RLOP",
     "scheduler": {
         "scheduler_RLOP": {
             "type": "RLOP",
             "params": {
                 "mode": "max",
-                "patience": 5,
-                "factor": 0.25,
+                "patience": 10,
+                "factor": 0.1,
                 "verbose": true,
                 "threshold": 1e-4 ,
-                "min_lr": 1e-4
+                "min_lr": 1e-6
             }
         },
         "scheduler_cosinA": {
             "type": "cosinA",
             "params": {
                 "T_max": 25,
-                "eta_min": 1e-4,
+                "eta_min": 1e-6,
                 "verbose": true
             }
         },
@@ -28,7 +28,7 @@
             "params": {
                 "T_0": 25,
                 "T_mult": 1,
-                "eta_min": 1e-4,
+                "eta_min": 1e-6,
                 "verbose": true
             }
         }
