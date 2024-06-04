@@ -96,10 +96,11 @@ chosen_scheduler = scheduler_params.get(chosen_scheduler_name) if scheduler_para
 scheduler_info = f"Scheduler: {chosen_scheduler['type']}" if chosen_scheduler else "No Scheduler"
 
 #Hyperparameters Confirmation
-print(f"Dataset Choice: {dataset_choice}")
-print(f"Max Epochs: {max_epochs}")
+print(f"Scheduler: {scheduler_info}")
 print(f"Loss Function: {loss_function_name}")
-print(f"Learning Rate: {learning_rate}, with {scheduler_info}")
+print(f"Dataset Choice: {dataset_choice}")
+print(f"Learning Rate: {learning_rate}")
+print(f"Max Epochs: {max_epochs}")
 print(f"Batch Size: {batch_size}")
 print(f"Validation Interval: {val_interval}")
 #print(f"Number of Workers: {num_workers}")
