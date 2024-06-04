@@ -397,7 +397,7 @@ loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=Tr
 #loss_function = MixedLoss(weight_bce=0.5, weight_dice=0.5) #PyTorch & MONAI - MIXED loss: 0.5
 
 
-loss_function_name = "DiceCELoss_RLOP"
+loss_function_name = "DiceCELoss"
 
 ##################################
 print("Create Optimizer ")
