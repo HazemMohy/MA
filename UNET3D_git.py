@@ -79,6 +79,8 @@ if max_epochs == 100:
 elif max_epochs == 1000:
     batch_size = 4
     val_interval = 20
+
+loss_function_name = "DiceCELoss"
 ##################################
 # Extract scheduler parameters if present
 scheduler_params = hyperparameters.get("scheduler", None)
@@ -94,8 +96,9 @@ scheduler_info = f"Scheduler: {chosen_scheduler['type']}" if chosen_scheduler el
 
 #Hyperparameters Confirmation
 print(f"Dataset Choice: {dataset_choice}")
-print(f"Learning Rate: {learning_rate}, with {scheduler_info}")
 print(f"Max Epochs: {max_epochs}")
+print(f"Loss Function: {loss_function_name}")
+print(f"Learning Rate: {learning_rate}, with {scheduler_info}")
 print(f"Batch Size: {batch_size}")
 print(f"Validation Interval: {val_interval}")
 #print(f"Number of Workers: {num_workers}")
