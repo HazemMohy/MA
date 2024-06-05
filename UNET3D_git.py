@@ -636,7 +636,11 @@ for epoch in range(max_epochs):
 
 # Print the unique learning rates used
 print("-" * 40)
-print("Unique Learning Rates used during training:", sorted(unique_learning_rates))
+print("-" * 40)
+if scheduler:
+    print("Unique Learning Rates used during training:", sorted(unique_learning_rates))
+else:
+    print("No learning rate scheduling applied, constant learning rate used.")
 
 
 #prints a summary message with the best metric achieved and the corresponding epoch.
