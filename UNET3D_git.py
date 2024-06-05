@@ -80,6 +80,9 @@ if max_epochs == 100:
 elif max_epochs in [1000, 4000, 8000]:
     batch_size = 4
     val_interval = 20
+else:
+    batch_size = 4
+    val_interval = 20
 
 loss_function_name = "DiceCELoss"
 ##################################
