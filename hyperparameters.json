@@ -1,7 +1,7 @@
 {
     "dataset_choice": "4x",
     "learning_rate": 0.0001,
-    "max_epochs": 4000,
+    "max_epochs": 8000,
     "chosen_scheduler": "none",
     "scheduler": {
         "scheduler_RLOP": {
