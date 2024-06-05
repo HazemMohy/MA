@@ -77,7 +77,7 @@ max_epochs = hyperparameters["max_epochs"]
 if max_epochs == 100: 
     batch_size = 4 #immer 8
     val_interval = 5
-elif max_epochs == 4000:
+elif max_epochs in [1000, 4000, 8000]:
     batch_size = 4
     val_interval = 20
 
