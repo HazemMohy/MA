@@ -29,6 +29,15 @@ from monai.transforms import (
     RandRotate90,
     Resize,
     ScaleIntensity,
+    LoadImage,
+    AddChannel,
+    NormalizeIntensity,
+    ScaleIntensity,
+    EnsureChannelFirst,
+    Resize,
+    RandRotate90,
+    ToTensor,
+    SpatialPad,
     )
 from monai.networks.nets import UNet
 from monai.networks.layers import Norm
@@ -64,6 +73,8 @@ import monai
 import json
 import os
 ##################################
+#The pin_memory parameter in DataLoader is used to speed up data transfer between the host (CPU) and the GPU. When pin_memory is set to True, it allows the data loader to use pinned (page-locked) memory, which can make data transfer
+#to the GPU faster. This is particularly useful when training models on a GPU.
 pin_memory = torch.cuda.is_available()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -122,4 +133,60 @@ shuffled_labels_one_hot = torch.nn.functional.one_hot(torch.as_tensor(shuffled_l
 # Print the one-hot encoded labels
 print("One-hot encoded SHUFFLED labels:")
 print(shuffled_labels_one_hot)
+##################################
+print("Create transforms")
+
+# Define custom function for Lambda transform
+def print_shape(x):
+    print(f"Shape: {x.shape}")
+    return x
+
+# Define transforms
+# I used the sames ones as in phase 1 (segmntation task)
+train_transforms = Compose([
+    #The image_only parameter in the LoadImage transform in MONAI specifies whether to return only the image data or a dictionary containing additional metadata. When image_only=True,
+    #the transform will load and return only the image itself, without any accompanying metadata. This is useful when you only need the image data for further processing or feeding into a neural network.
+    LoadImage(image_only=True), 
+    
+    AddChannel(),
+    NormalizeIntensity(nonzero=True),
+    #ScaleIntensity(),
+    #EnsureChannelFirst(),
+    #Resize((96, 96, 96)),
+    SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
+    Lambda(print_shape),
+    #RandRotate90(),
+    ToTensor()
+])
+
+val_transforms = Compose([
+    LoadImage(image_only=True), 
+    AddChannel(),
+    NormalizeIntensity(nonzero=True),
+    #ScaleIntensity(),
+    #EnsureChannelFirst(),
+    #Resize((96, 96, 96)),
+    SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
+    Lambda(print_shape),
+    #RandRotate90(),
+    ToTensor()
+])
+##################################
+print("Define dataset loaders")
+
+# Define ImageDataset
+check_ds = ImageDataset(image_files=shuffled_paths, labels=shuffled_labels, transform=train_transforms)
+check_loader = DataLoader(check_ds, batch_size=1, num_workers=2, pin_memory=pin_memory) #batch_size = 1 only in the testing_phase
+
+# Check first data loader output
+im, label = monai.utils.misc.first(check_loader) #Fetches the first batch from the data loader to check the output type and shape.
+print(type(im), im.shape, label, label.shape) #Prints the type and shape of the images and labels to verify correctness.
+
+# Create a training data loader
+train_ds = ImageDataset(image_files=shuffled_paths[:7], labels=shuffled_labels[:7], transform=train_transforms) #Creates a dataset object using ImageDataset with the shuffled paths and labels, applying the train_transforms.
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, pin_memory=pin_memory) #Creates a data loader for the dataset. pin_memory=pin_memory enables pinned memory if a GPU is available.
+
+# Create a validation data loader
+val_ds = ImageDataset(image_files=shuffled_paths[-3:], labels=shuffled_labels[-3:], transform=val_transforms)
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=2, pin_memory=pin_memory)
 ##################################
