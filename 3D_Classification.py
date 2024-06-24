@@ -98,11 +98,15 @@ for path, label in zip(combined_paths, labels):
     print(f"{path} - Label: {label}")
 
 # Pair paths and labels together and shuffle them
+# pairs each path with its corresponding label, creating tuples. AND "list" converts the zipped object into a list of tuples.
 combined = list(zip(combined_paths, labels))
-random.shuffle(combined)
+random.shuffle(combined) #shuffles the list of tuples, maintaining the correct path-label pairs.
 
 # Separate the paths and labels back into individual lists after shuffling
-shuffled_paths, shuffled_labels = zip(*combined)
+#unzips the list of tuples back into two separate tuples: one for paths and one for labels.
+#WHY? Most data processing and machine learning libraries expect features and labels to be provided separately. Separating them into individual lists aligns with this convention.
+#and because as well: Functions and methods used in data loaders, training loops, and other processing steps often expect separate lists of features and labels.
+shuffled_paths, shuffled_labels = zip(*combined)  #shuffled_paths, shuffled_labels = zip(*combined) assigns these tuples to separate variables.
 # Print the shuffled paths and their corresponding labels
 print("Shuffled paths of bg and raw with labels:")
 for path, label in zip(shuffled_paths, shuffled_labels):
