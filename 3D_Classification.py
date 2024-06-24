@@ -176,7 +176,7 @@ print("Define dataset loaders")
 
 # Define ImageDataset
 check_ds = ImageDataset(image_files=shuffled_paths, labels=shuffled_labels, transform=train_transforms)
-check_loader = DataLoader(check_ds, batch_size=1, num_workers=2, pin_memory=pin_memory) #batch_size = 1 only in the testing_phase
+check_loader = DataLoader(check_ds, batch_size=1, num_workers=2, pin_memory=pin_memory) #batch_size = 1 ONLY in the testing_phase
 
 # Check first data loader output
 im, label = monai.utils.misc.first(check_loader) #Fetches the first batch from the data loader to check the output type and shape.
