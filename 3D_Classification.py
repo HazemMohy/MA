@@ -107,18 +107,19 @@ random.shuffle(combined) #shuffles the list of tuples, maintaining the correct p
 #WHY? Most data processing and machine learning libraries expect features and labels to be provided separately. Separating them into individual lists aligns with this convention.
 #and because as well: Functions and methods used in data loaders, training loops, and other processing steps often expect separate lists of features and labels.
 shuffled_paths, shuffled_labels = zip(*combined)  #shuffled_paths, shuffled_labels = zip(*combined) assigns these tuples to separate variables.
+
 # Print the shuffled paths and their corresponding labels
 print("Shuffled paths of bg and raw with labels:")
 for path, label in zip(shuffled_paths, shuffled_labels):
     print(f"{path} - Label: {label}")
 
 
-# Convert labels to one-hot format
+# Convert SHUFFLED labels (NOT the original "labels") to one-hot format
 # Represent labels in one-hot format for binary classifier training
 # BCEWithLogitsLoss requires target to have same shape as input
-labels_one_hot = torch.nn.functional.one_hot(torch.as_tensor(labels)).float()
+shuffled_labels_one_hot = torch.nn.functional.one_hot(torch.as_tensor(shuffled_labels)).float()
 
 # Print the one-hot encoded labels
-print("One-hot encoded labels:")
-print(labels_one_hot)
-
+print("One-hot encoded SHUFFLED labels:")
+print(shuffled_labels_one_hot)
+##################################
