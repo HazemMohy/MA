@@ -67,8 +67,8 @@ import os
 pin_memory = torch.cuda.is_available()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-print_config()
+# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# print_config()
 ##################################
 
 # Define the data directory path
@@ -80,16 +80,30 @@ train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:5]
 # Get the first 5 .nii.gz files from raw directory
 train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))[:5]
 
-# Combine the two lists into one variable
-combined_paths = train_bg + train_raw
-
-# Print the combined paths
-print("Combined paths of bg and raw:")
-for path in combined_paths:
-    print(path)
-
 # Check if the lists are correctly populated
 if not train_bg:
     print("No .nii.gz files found in the bg directory.")
 if not train_raw:
     print("No .nii.gz files found in the raw directory.")
+
+# Combine the two lists into one variable
+combined_paths = train_bg + train_raw
+
+# Create labels: 0 for bg, 1 for raw
+labels = np.array([0] * len(train_bg) + [1] * len(train_raw))
+
+# Print the combined paths and their corresponding labels
+print("Combined paths of bg and raw with labels:")
+for path, label in zip(combined_paths, labels):
+    print(f"{path} - Label: {label}")
+
+
+# Convert labels to one-hot format
+# Represent labels in one-hot format for binary classifier training
+# BCEWithLogitsLoss requires target to have same shape as input
+labels_one_hot = torch.nn.functional.one_hot(torch.as_tensor(labels)).float()
+
+# Print the one-hot encoded labels
+print("One-hot encoded labels:")
+print(labels_one_hot)
+
