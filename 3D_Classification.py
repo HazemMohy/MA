@@ -146,16 +146,15 @@ def print_shape(x):
     return x
 
 # Define transforms
-# I used the sames ones as in phase 1 (segmntation task)
+# I used the sames ones as in phase 1 (segmntation task), however, with one exception!
 train_transforms = Compose([
     #The image_only parameter in the LoadImage transform in MONAI specifies whether to return only the image data or a dictionary containing additional metadata. When image_only=True,
     #the transform will load and return only the image itself, without any accompanying metadata. This is useful when you only need the image data for further processing or feeding into a neural network.
     LoadImage(image_only=True), 
-    
-    AddChannel(),
+    EnsureChannelFirst(channel_dim='no_channel'), #WARNING: better than AddChannel()) #ERROR: The primary issue is that the ImageDataset should be given a list of file paths, and the transforms should be compatible with handling file paths.
+    #AddChannel(),
     NormalizeIntensity(nonzero=True),
     #ScaleIntensity(),
-    #EnsureChannelFirst(),
     #Resize((96, 96, 96)),
     SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
     Lambda(print_shape),
@@ -165,10 +164,9 @@ train_transforms = Compose([
 
 val_transforms = Compose([
     LoadImage(image_only=True), 
-    AddChannel(),
+    EnsureChannelFirst(channel_dim ='no_channel'),
     NormalizeIntensity(nonzero=True),
     #ScaleIntensity(),
-    #EnsureChannelFirst(),
     #Resize((96, 96, 96)),
     SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
     Lambda(print_shape),
@@ -193,6 +191,13 @@ train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, p
 # Create a validation data loader
 val_ds = ImageDataset(image_files=shuffled_paths[-3:], labels=shuffled_labels[-3:], transform=val_transforms)
 val_loader = DataLoader(val_ds, batch_size=1, num_workers=2, pin_memory=pin_memory)
+
+
+# val_ds = Dataset(data=val_files, transform=val_transforms)
+# val_loader = DataLoader(val_ds, batch_size=batch_size, num_workers=2)
+
+# test_ds = Dataset(data=test_files, transform=test_transforms)
+# test_loader = DataLoader(test_ds, batch_size=batch_size, num_workers=2)
 ##################################
 # standard PyTorch program style
 # Create DenseNet121, CrossEntropyLoss and Adam optimizer. THEN, start the Training & Evaluation 
