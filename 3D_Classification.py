@@ -89,12 +89,23 @@ if not train_raw:
 # Combine the two lists into one variable
 combined_paths = train_bg + train_raw
 
-# Create labels: 0 for bg, 1 for raw
+# Create binary labels: 0 for bg, 1 for raw
 labels = np.array([0] * len(train_bg) + [1] * len(train_raw))
 
 # Print the combined paths and their corresponding labels
 print("Combined paths of bg and raw with labels:")
 for path, label in zip(combined_paths, labels):
+    print(f"{path} - Label: {label}")
+
+# Pair paths and labels together and shuffle them
+combined = list(zip(combined_paths, labels))
+random.shuffle(combined)
+
+# Separate the paths and labels back into individual lists after shuffling
+shuffled_paths, shuffled_labels = zip(*combined)
+# Print the shuffled paths and their corresponding labels
+print("Shuffled paths of bg and raw with labels:")
+for path, label in zip(shuffled_paths, shuffled_labels):
     print(f"{path} - Label: {label}")
 
 
