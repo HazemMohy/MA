@@ -176,21 +176,34 @@ val_transforms = Compose([
 ##################################
 print("Define dataset loaders")
 
-# Define ImageDataset
-check_ds = ImageDataset(image_files=shuffled_paths, labels=shuffled_labels, transform=train_transforms)
-check_loader = DataLoader(check_ds, batch_size=1, num_workers=2, pin_memory=pin_memory) #batch_size = 1 ONLY in the testing_phase
+# Prepare data
+train_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[:7], shuffled_labels[:7])]
+val_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[-3:], shuffled_labels[-3:])]
 
-# Check first data loader output
-im, label = monai.utils.misc.first(check_loader) #Fetches the first batch from the data loader to check the output type and shape.
-print(type(im), im.shape, label, label.shape) #Prints the type and shape of the images and labels to verify correctness.
+# # Define ImageDataset
+# check_ds = ImageDataset(image_files=shuffled_paths, labels=shuffled_labels, transform=train_transforms)
+# check_loader = DataLoader(check_ds, batch_size=1, num_workers=2, pin_memory=pin_memory) #batch_size = 1 ONLY in the testing_phase
+
+# # Check first data loader output
+# im, label = monai.utils.misc.first(check_loader) #Fetches the first batch from the data loader to check the output type and shape.
+# print(type(im), im.shape, label, label.shape) #Prints the type and shape of the images and labels to verify correctness.
 
 # Create a training data loader
-train_ds = ImageDataset(image_files=shuffled_paths[:7], labels=shuffled_labels[:7], transform=train_transforms) #Creates a dataset object using ImageDataset with the shuffled paths and labels, applying the train_transforms.
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, pin_memory=pin_memory) #Creates a data loader for the dataset. pin_memory=pin_memory enables pinned memory if a GPU is available.
+# train_ds = ImageDataset(image_files=shuffled_paths[:7], labels=shuffled_labels[:7], transform=train_transforms) #Creates a dataset object using ImageDataset with the shuffled paths and labels, applying the train_transforms.
+# train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, pin_memory=pin_memory) #Creates a data loader for the dataset. pin_memory=pin_memory enables pinned memory if a GPU is available.
+train_ds = Dataset(data=train_files, transform=train_transforms)
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, pin_memory=pin_memory)
 
 # Create a validation data loader
-val_ds = ImageDataset(image_files=shuffled_paths[-3:], labels=shuffled_labels[-3:], transform=val_transforms)
+# val_ds = ImageDataset(image_files=shuffled_paths[-3:], labels=shuffled_labels[-3:], transform=val_transforms)
+# val_loader = DataLoader(val_ds, batch_size=1, num_workers=2, pin_memory=pin_memory)
+val_ds = Dataset(data=val_files, transform=val_transforms)
 val_loader = DataLoader(val_ds, batch_size=1, num_workers=2, pin_memory=pin_memory)
+
+
+# Check first data loader output
+im, label = monai.utils.misc.first(train_loader)
+print(type(im), im.shape, label, label.shape)
 
 
 # val_ds = Dataset(data=val_files, transform=val_transforms)
