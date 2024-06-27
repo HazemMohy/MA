@@ -147,7 +147,7 @@ data_dicts = [
     for img, label in zip(shuffled_paths, shuffled_labels_one_hot)
 ]
 
-print(data_dicts[:3])
+print(data_dicts[:5])
 ##################################
 ##################################
 print("Create transforms")
