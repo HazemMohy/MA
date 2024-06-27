@@ -133,6 +133,8 @@ for path, label in zip(shuffled_paths, shuffled_labels):
 # Convert SHUFFLED labels (NOT the original "labels") to one-hot format
 # Represent labels in one-hot format for binary classifier training
 # BCEWithLogitsLoss requires target to have same shape as input
+#One-hot encoding is a method of converting categorical labels into a binary vector format where only one element is "hot" (i.e., set to 1) and all other elements are "cold" (i.e., set to 0). This is
+#particularly useful in machine learning tasks because many algorithms, including neural networks, require numerical input and cannot work directly with categorical labels.
 shuffled_labels_one_hot = torch.nn.functional.one_hot(torch.as_tensor(shuffled_labels)).float()
 
 # Print the one-hot encoded labels
@@ -153,9 +155,9 @@ print(data_dicts[:5])
 print("Create transforms")
 
 # Define custom function for Lambda transform
-def print_shape(x):
-    print(f"Shape: {x.shape}")
-    return x
+# def print_shape(x):
+#     print(f"Shape: {x.shape}")
+#     return x
 
 # Define transforms
 # I used the sames ones as in phase 1 (segmntation task), however, with one exception!
@@ -169,7 +171,7 @@ train_transforms = Compose([
     #ScaleIntensity(),
     #Resize((96, 96, 96)),
     SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
-    Lambda(print_shape),
+    #Lambda(print_shape),
     #RandRotate90(),
     
     # ToTensord transform is typically used to convert both images and labels to PyTorch tensors, which is necessary for compatibility with
@@ -184,7 +186,7 @@ val_transforms = Compose([
     #ScaleIntensity(),
     #Resize((96, 96, 96)),
     SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
-    Lambda(print_shape),
+    #Lambda(print_shape),
     #RandRotate90(),
     ToTensord(keys=["image", "label"])
 ])
