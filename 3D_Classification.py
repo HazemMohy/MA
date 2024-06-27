@@ -34,6 +34,7 @@ from monai.transforms import (
     NormalizeIntensity,
     ScaleIntensity,
     EnsureChannelFirst,
+    EnsureChannelFirstd,
     Resize,
     RandRotate90,
     ToTensor,
