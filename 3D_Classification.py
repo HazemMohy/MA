@@ -78,7 +78,7 @@ warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 ##################################
 #The pin_memory parameter in DataLoader is used to speed up data transfer between the host (CPU) and the GPU. When pin_memory is set to True, it allows the data loader to use pinned (page-locked) memory, which can make data transfer
 #to the GPU faster. This is particularly useful when training models on a GPU.
-pin_memory = torch.cuda.is_available()
+#pin_memory = torch.cuda.is_available()
 device = torch.device("cuda:0")
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -137,6 +137,17 @@ shuffled_labels_one_hot = torch.nn.functional.one_hot(torch.as_tensor(shuffled_l
 # Print the one-hot encoded labels
 print("One-hot encoded SHUFFLED labels:")
 print(shuffled_labels_one_hot)
+
+##################################
+# Create dictionaries for the dataset
+
+data_dicts = [
+    {"image": img, "label": label}
+    for img, label in zip(shuffled_paths, shuffled_labels_one_hot)
+]
+
+print(data_dicts[:3])
+##################################
 ##################################
 print("Create transforms")
 
@@ -147,38 +158,60 @@ def print_shape(x):
 
 # Define transforms
 # I used the sames ones as in phase 1 (segmntation task), however, with one exception!
+# train_transforms = Compose([
+#     #The image_only parameter in the LoadImage transform in MONAI specifies whether to return only the image data or a dictionary containing additional metadata. When image_only=True,
+#     #the transform will load and return only the image itself, without any accompanying metadata. This is useful when you only need the image data for further processing or feeding into a neural network.
+#     LoadImage(image_only=True), 
+#     EnsureChannelFirst(channel_dim='no_channel'), #WARNING: better than AddChannel()) #ERROR: The primary issue is that the ImageDataset should be given a list of file paths, and the transforms should be compatible with handling file paths.
+#     #AddChannel(),
+#     NormalizeIntensity(nonzero=True),
+#     #ScaleIntensity(),
+#     #Resize((96, 96, 96)),
+#     SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
+#     Lambda(print_shape),
+#     #RandRotate90(),
+#     ToTensor()
+# ])
+
 train_transforms = Compose([
-    #The image_only parameter in the LoadImage transform in MONAI specifies whether to return only the image data or a dictionary containing additional metadata. When image_only=True,
-    #the transform will load and return only the image itself, without any accompanying metadata. This is useful when you only need the image data for further processing or feeding into a neural network.
-    LoadImage(image_only=True), 
-    EnsureChannelFirst(channel_dim='no_channel'), #WARNING: better than AddChannel()) #ERROR: The primary issue is that the ImageDataset should be given a list of file paths, and the transforms should be compatible with handling file paths.
-    #AddChannel(),
-    NormalizeIntensity(nonzero=True),
-    #ScaleIntensity(),
-    #Resize((96, 96, 96)),
-    SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
+    LoadImaged(keys=["image"]), 
+    EnsureChannelFirstd(keys=["image"]), 
+    NormalizeIntensityd(keys=["image"], nonzero=True),
+    SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
     Lambda(print_shape),
-    #RandRotate90(),
-    ToTensor()
+    ToTensord(keys=["image", "label"])
 ])
 
 val_transforms = Compose([
-    LoadImage(image_only=True), 
-    EnsureChannelFirst(channel_dim ='no_channel'),
-    NormalizeIntensity(nonzero=True),
-    #ScaleIntensity(),
-    #Resize((96, 96, 96)),
-    SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
+    LoadImaged(keys=["image"]), 
+    EnsureChannelFirstd(keys=["image"]), 
+    NormalizeIntensityd(keys=["image"], nonzero=True),
+    SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
     Lambda(print_shape),
-    #RandRotate90(),
-    ToTensor()
+    ToTensord(keys=["image", "label"])
 ])
+
+
+
+# val_transforms = Compose([
+#     LoadImage(image_only=True), 
+#     EnsureChannelFirst(channel_dim ='no_channel'),
+#     NormalizeIntensity(nonzero=True),
+#     #ScaleIntensity(),
+#     #Resize((96, 96, 96)),
+#     SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
+#     Lambda(print_shape),
+#     #RandRotate90(),
+#     ToTensor()
+# ])
 ##################################
 print("Define dataset loaders")
 
-# Prepare data
-train_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[:7], shuffled_labels[:7])]
-val_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[-3:], shuffled_labels[-3:])]
+# Prepare data: Split data into training and validation
+# train_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[:7], shuffled_labels[:7])]
+# val_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[-3:], shuffled_labels[-3:])]
+train_files = data_dicts[:7]
+val_files = data_dicts[-3:]
 
 # # Define ImageDataset
 # check_ds = ImageDataset(image_files=shuffled_paths, labels=shuffled_labels, transform=train_transforms)
@@ -192,13 +225,13 @@ val_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths
 # train_ds = ImageDataset(image_files=shuffled_paths[:7], labels=shuffled_labels[:7], transform=train_transforms) #Creates a dataset object using ImageDataset with the shuffled paths and labels, applying the train_transforms.
 # train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, pin_memory=pin_memory) #Creates a data loader for the dataset. pin_memory=pin_memory enables pinned memory if a GPU is available.
 train_ds = Dataset(data=train_files, transform=train_transforms)
-train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2, pin_memory=pin_memory)
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2)#, pin_memory=pin_memory)
 
 # Create a validation data loader
 # val_ds = ImageDataset(image_files=shuffled_paths[-3:], labels=shuffled_labels[-3:], transform=val_transforms)
 # val_loader = DataLoader(val_ds, batch_size=1, num_workers=2, pin_memory=pin_memory)
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=1, num_workers=2, pin_memory=pin_memory)
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)#, pin_memory=pin_memory)
 
 
 # Check first data loader output
