@@ -158,27 +158,21 @@ def print_shape(x):
 
 # Define transforms
 # I used the sames ones as in phase 1 (segmntation task), however, with one exception!
-# train_transforms = Compose([
-#     #The image_only parameter in the LoadImage transform in MONAI specifies whether to return only the image data or a dictionary containing additional metadata. When image_only=True,
-#     #the transform will load and return only the image itself, without any accompanying metadata. This is useful when you only need the image data for further processing or feeding into a neural network.
-#     LoadImage(image_only=True), 
-#     EnsureChannelFirst(channel_dim='no_channel'), #WARNING: better than AddChannel()) #ERROR: The primary issue is that the ImageDataset should be given a list of file paths, and the transforms should be compatible with handling file paths.
-#     #AddChannel(),
-#     NormalizeIntensity(nonzero=True),
-#     #ScaleIntensity(),
-#     #Resize((96, 96, 96)),
-#     SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
-#     Lambda(print_shape),
-#     #RandRotate90(),
-#     ToTensor()
-# ])
-
 train_transforms = Compose([
+    #The image_only parameter in the LoadImage transform in MONAI specifies whether to return only the image data or a dictionary containing additional metadata. When image_only=True,
+    #the transform will load and return only the image itself, without any accompanying metadata. This is useful when you only need the image data for further processing or feeding into a neural network --> LoadImage(image_only=True)
     LoadImaged(keys=["image"]), 
     EnsureChannelFirstd(keys=["image"]), 
+    #AddChannel(),
     NormalizeIntensityd(keys=["image"], nonzero=True),
+    #ScaleIntensity(),
+    #Resize((96, 96, 96)),
     SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
     Lambda(print_shape),
+    #RandRotate90(),
+    
+    # ToTensord transform is typically used to convert both images and labels to PyTorch tensors, which is necessary for compatibility with
+    #PyTorch models. Even if the labels contain only 1's and 0's, they should still be converted to tensors so that they can be used in computations with the model.
     ToTensord(keys=["image", "label"])
 ])
 
@@ -186,24 +180,13 @@ val_transforms = Compose([
     LoadImaged(keys=["image"]), 
     EnsureChannelFirstd(keys=["image"]), 
     NormalizeIntensityd(keys=["image"], nonzero=True),
+    #ScaleIntensity(),
+    #Resize((96, 96, 96)),
     SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
     Lambda(print_shape),
+    #RandRotate90(),
     ToTensord(keys=["image", "label"])
 ])
-
-
-
-# val_transforms = Compose([
-#     LoadImage(image_only=True), 
-#     EnsureChannelFirst(channel_dim ='no_channel'),
-#     NormalizeIntensity(nonzero=True),
-#     #ScaleIntensity(),
-#     #Resize((96, 96, 96)),
-#     SpatialPad(spatial_size=(320, 320, 320), mode='reflect'),
-#     Lambda(print_shape),
-#     #RandRotate90(),
-#     ToTensor()
-# ])
 ##################################
 print("Define dataset loaders")
 
