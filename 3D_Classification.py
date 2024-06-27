@@ -218,9 +218,9 @@ val_ds = Dataset(data=val_files, transform=val_transforms)
 val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)#, pin_memory=pin_memory)
 
 
-# Check first data loader output
-im, label = monai.utils.misc.first(train_loader)
-print(type(im), im.shape, label, label.shape)
+# # Check first data loader output
+# im, label = monai.utils.misc.first(train_loader)
+# print(type(im), im.shape, label, label.shape)
 
 
 # val_ds = Dataset(data=val_files, transform=val_transforms)
