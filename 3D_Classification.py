@@ -199,9 +199,21 @@ print(f"Training patches: {num_train}")
 print(f"Validation patches: {num_val}")
 print(f"Testing patches: {len(test_files)}")
 
-print("Train files:", train_files)
-print("Validation files:", val_files)
-print("Test files:", test_files)
+# print("Train files:", train_files)
+# print("Validation files:", val_files)
+# print("Test files:", test_files)
+
+print("Train files:")
+for file in train_files:
+    print(file)
+
+print("Validation files:")
+for file in val_files:
+    print(file)
+
+print("Test files:")
+for file in test_files:
+    print(file)
 
 
 
