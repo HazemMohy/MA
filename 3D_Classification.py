@@ -270,8 +270,8 @@ print("Define dataset loaders")
 # Prepare data: Split data into training and validation
 # train_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[:7], shuffled_labels[:7])]
 # val_files = [{"image": img, "label": label} for img, label in zip(shuffled_paths[-3:], shuffled_labels[-3:])]
-train_files = data_dicts[:7]
-val_files = data_dicts[-3:]
+# train_files = data_dicts[:7]
+# val_files = data_dicts[-3:]
 
 # # Define ImageDataset
 # check_ds = ImageDataset(image_files=shuffled_paths, labels=shuffled_labels, transform=train_transforms)
