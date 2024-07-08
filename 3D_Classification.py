@@ -88,6 +88,20 @@ device = torch.device("cuda:0")
 # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # print_config()
 ##################################
+#SLURM_JOB_ID
+slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
+
+
+runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
+os.makedirs(runs_dir, exist_ok=True)
+
+#run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}"
+run_folder_name = f"run_{slurm_job_id}__Phase_2"
+run_dir = os.path.join(runs_dir, run_folder_name)
+os.makedirs(run_dir, exist_ok=True)
+##################################
+
+
 
 # Define the data directory path
 data_dir = "/lustre/groups/iterm/Hazem/MA/data/4x"
@@ -478,3 +492,12 @@ with torch.no_grad():
 test_accuracy = num_correct / metric_count
 
 print(f"Test accuracy: {test_accuracy:.4f}")
+
+##################################
+## the Runs folder - all in one
+
+
+##################################
+#final print
+print("-" * 40)
+print("ALL DONE!") 
