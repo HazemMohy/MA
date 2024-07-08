@@ -64,6 +64,7 @@ import pandas as pd
 import nibabel as nib
 from scipy.ndimage import zoom
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts
+import torch.nn.functional as F
 ##############################################################################################################################################################################
 #new imports
 
@@ -232,10 +233,44 @@ val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)#, pin_memory=pin_me
 # test_loader = DataLoader(test_ds, batch_size=batch_size, num_workers=2)
 ##################################
 #standard PyTorch program style
-#Create DenseNet121, CrossEntropyLoss and Adam optimizer. THEN, start the Training & Evaluation 
+#Create U-Net_for_Classification, CrossEntropyLoss and Adam optimizer. THEN, start the Training & Evaluation 
+# Custom UNet for Classification
 
+print("Create U-Net for Classification")
+#Best Option for Adapting U-Net for Binary Classification: having the MONAI-U-Net as it is (remains UNCHANGED) THEN using/ADDING a global average pooling followed by a fully connected layer, which are standard techniques in CNN-based classification tasks.
+#NOT replacing the last layer of MONAI's U-Net and implementing instead a fully connected layer. That is an option as well BUT NOT the most optimal one! WHY adding is better than replacement?
+#   1) It leverages the feature extraction capabilities of the original U-Net and adapts the output for classification without altering the core architecture of the U-Net.
+#   2) Modularity: This approach maintains the integrity of the original U-Net model, which makes it easier to update or modify the base model without affecting the classification layers.
+#   3) Simplicity: Adding layers for pooling and classification is simpler and less error-prone than modifying the original U-Net structure.
+#   4) Flexibility: This method allows you to change the classification layers independently of the base model, making it easier to experiment with different pooling and classification strategies.
+#   5) Separation of Concerns: By adding layers, you separate the feature extraction (handled by U-Net) from the classification (handled by the added layers), which is a cleaner design.
+#This method efficiently reduces the spatial dimensions and produces a single output for classification
+class UNetForClassification(nn.Module):
+    def __init__(self):
+        super(UNetForClassification, self).__init__()
+        self.unet = UNet(
+            spatial_dims=3,
+            in_channels=1,
+            out_channels=32,  # Adjust this based on the UNet implementation
+            channels=(16, 32, 64, 128, 256),
+            strides=(2, 2, 2, 2)
+        )
+        self.global_avg_pool = nn.AdaptiveAvgPool3d(1)  # Global average pooling
+        self.fc = nn.Linear(32, 2)  # Fully connected layer for classification
+
+    def forward(self, x):
+        x = self.unet(x)
+        x = self.global_avg_pool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        #x = F.softmax(x, dim=1) #Ensure the output of your fc layer uses a softmax activation for a proper probability distribution over classes.
+        #x = torch.sigmoid(x) # Use sigmoid activation for binary classification. It ensures that the output is a probability value between 0 and 1, which is appropriate for binary classification.
+        return x
+
+#################################
 print("Create Model")
-model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+#model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
+model = UNetForClassification().to(device)
 
 print("Create Loss")
 loss_function = torch.nn.CrossEntropyLoss()
