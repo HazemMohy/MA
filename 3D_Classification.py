@@ -64,6 +64,7 @@ import pandas as pd
 import nibabel as nib
 from scipy.ndimage import zoom
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts
+import torch.nn as nn
 import torch.nn.functional as F
 ##############################################################################################################################################################################
 #new imports
