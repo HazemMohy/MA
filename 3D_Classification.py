@@ -252,6 +252,18 @@ val_transforms = Compose([
     #RandRotate90(),
     ToTensord(keys=["image", "label"])
 ])
+
+test_transforms = Compose([
+    LoadImaged(keys=["image"]), 
+    EnsureChannelFirstd(keys=["image"]), 
+    NormalizeIntensityd(keys=["image"], nonzero=True),
+    #ScaleIntensity(),
+    #Resize((96, 96, 96)),
+    SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
+    #Lambda(print_shape),
+    #RandRotate90(),
+    ToTensord(keys=["image"]) # Only apply transformations to the image key #Since the test set does not have labels, you should modify the test transforms to only apply the transformations to the image key.
+])
 ##################################
 print("Define dataset loaders")
 
@@ -282,7 +294,7 @@ val_ds = Dataset(data=val_files, transform=val_transforms)
 val_loader = DataLoader(val_ds, batch_size=1, num_workers=2)#, pin_memory=pin_memory)
 
 # Create a testing data loader
-test_ds = Dataset(data=test_files, transform=val_transforms)
+test_ds = Dataset(data=test_files, transform=test_transforms)
 test_loader = DataLoader(test_ds, batch_size=1, num_workers=2)
 
 
