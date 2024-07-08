@@ -255,6 +255,9 @@ class UNetForClassification(nn.Module):
         self.unet = UNet(
             spatial_dims=3,
             in_channels=1,
+
+            # out_channels --> This defines the depth of the feature maps output by the UNet. This value can be adjusted based on the complexity of the data and the desired model capacity.
+            # The value 32 here is not related to the number of classes but rather to the richness of the feature representation extracted by the UNet. A higher value allows the network to learn more complex features but increases the computational load.
             out_channels=32,  # Adjust this based on the UNet implementation
             channels=(16, 32, 64, 128, 256),
             strides=(2, 2, 2, 2)
@@ -262,20 +265,26 @@ class UNetForClassification(nn.Module):
         # Global average pooling
         # This layer converts the feature map into a fixed-size vector by averaging the spatial dimensions.
         # Adding a global pooling layer before the final fully connected layer can aggregate the features from the spatial dimensions into a single vector suitable for classification.
+        # This layer reduces the spatial dimensions of the feature map output from the UNet to 1x1x1 by taking the average value of each channel. This results in a tensor of shape (batch_size, out_channels, 1, 1, 1),
+        # effectively converting the 3D feature map into a vector of size equal to out_channels (32 in this case).
         self.global_avg_pool = nn.AdaptiveAvgPool3d(1)  
         
         # Fully connected layer for classification
         # The output from the global pooling layer can be passed through a fully connected layer to get the class scores.
         # This layer maps the feature vector to the desired number of classes (2 in this case).
-        self.fc = nn.Linear(32, 2)  
+        # This layer maps the 32-dimensional feature vector to a single output.
+        # nn.Linear(32, 1): This means we have 32 input features (from the 32 channels output by the global average pooling) and 1 output feature. The single output feature is suitable for binary classification.
+        # The fully connected layer takes the 32 features from the global average pooling layer and maps them to a single output neuron. This single neuron output, after the sigmoid activation, gives the probability of
+        # the input belonging to the positive class (foreground).
+        self.fc = nn.Linear(32, 1) # 1 NOT 2 (BINARY classification) #Since you're using a sigmoid activation for binary classification, your output layer should have a single neuron.
 
     def forward(self, x):
-        x = self.unet(x)
-        x = self.global_avg_pool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
+        x = self.unet(x) # Passes the input through the UNet to extract features.
+        x = self.global_avg_pool(x) # Applies global average pooling to reduce the spatial dimensions.
+        x = torch.flatten(x, 1) # Flattens the tensor into a shape suitable for the fully connected layer.
+        x = self.fc(x) # Passes the flattened features through the fully connected layer to produce a single output.
         #x = F.softmax(x, dim=1) #Ensure the output of your fc layer uses a softmax activation for a proper probability distribution over classes.
-        x = torch.sigmoid(x) # Use sigmoid activation for binary classification. It ensures that the output is a probability value between 0 and 1, which is appropriate for binary classification.
+        x = torch.sigmoid(x) # Use sigmoid activation for binary classification. It ensures that the output is a probability value between 0 and 1, which is appropriate for binary classification. 
         return x
 
 #################################
@@ -284,8 +293,8 @@ print("Create Model")
 model = UNetForClassification().to(device)
 
 print("Create Loss")
-loss_function = torch.nn.CrossEntropyLoss()
-#loss_function = torch.nn.BCEWithLogitsLoss()  # also works with this data
+#loss_function = torch.nn.CrossEntropyLoss() #OLD
+loss_function = torch.nn.BCEWithLogitsLoss()  # Use BCEWithLogitsLoss for binary classification with a single output neuron. This loss function is suitable for binary classification tasks and expects RAW logits (NOT hot-encoded) as input.
 #loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
 
 print("Create Optimizer")
@@ -313,12 +322,16 @@ for epoch in range(max_epochs):
         step += 1
         #inputs, labels = batch_data[0].to(device), batch_data[1].to(device) #!!!!!!!! --> inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
         inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+        #labels = labels.argmax(dim=1).float().unsqueeze(1)  #OLD 
+        #Ensure that the output handling in the training and evaluation loops matches the expected format for the loss function and accuracy computation.
+        labels = labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification # BCEWithLogitsLoss expects single value labels # Convert one-hot to single value
         optimizer.zero_grad()
         outputs = model(inputs)
         #loss = loss_function(outputs, labels) #!!!!!!!! --> loss = loss_function(outputs, labels.argmax(dim=1))
         #CrossEntropyLoss: This loss function expects the target labels to be in class indices (not one-hot encoded). If your labels are one-hot encoded, you need to convert them back to class indices using labels.argmax(dim=1).
         #HERE: BCELoss or BCEWithLogitsLoss (you can use labels DIRECTLY): These loss functions can work directly with one-hot encoded labels or multi-label binary classification problems. If your network outputs match the shape and form of your one-hot encoded labels, you can use them directly.
-        loss = loss_function(outputs, labels.argmax(dim=1))
+        #loss = loss_function(outputs, labels.argmax(dim=1)) #OLD
+        loss = loss_function(outputs, labels)  # Use BCEWithLogitsLoss which expects single value labels
         loss.backward()
         optimizer.step()
         epoch_loss += loss.item()
@@ -338,9 +351,13 @@ for epoch in range(max_epochs):
         for val_data in val_loader:
             #val_images, val_labels = val_data[0].to(device), val_data[1].to(device) #!!!!!!!!! ---> val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
             val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+            #NIX #OLD
+            val_labels = val_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
+            #val_labels = val_labels.argmax(dim=1).float().unsqueeze(1)  # Convert one-hot to single value
             with torch.no_grad():
                 val_outputs = model(val_images)
-                value = torch.eq(val_outputs.argmax(dim=1), val_labels.argmax(dim=1))
+                #value = torch.eq(val_outputs.argmax(dim=1), val_labels.argmax(dim=1)) #OLD
+                value = torch.eq((val_outputs > 0.5).float(), val_labels)  # Compare with threshold 0.5
                 metric_count += len(value)
                 num_correct += value.sum().item()
 
