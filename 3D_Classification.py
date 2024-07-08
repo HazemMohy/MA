@@ -245,6 +245,10 @@ print("Create U-Net for Classification")
 #   4) Flexibility: This method allows you to change the classification layers independently of the base model, making it easier to experiment with different pooling and classification strategies.
 #   5) Separation of Concerns: By adding layers, you separate the feature extraction (handled by U-Net) from the classification (handled by the added layers), which is a cleaner design.
 #This method efficiently reduces the spatial dimensions and produces a single output for classification
+# ZUSAMMENFASSEND:
+# - The custom UNet model for classification first extracts features using the UNet architecture.
+# - The extracted features are globally pooled and then passed through a fully connected layer to obtain class scores. 
+# - This approach adapts the segmentation capabilities of UNet for a classification task by aggregating the spatial features and mapping them to class probabilities.
 class UNetForClassification(nn.Module):
     def __init__(self):
         super(UNetForClassification, self).__init__()
@@ -255,8 +259,15 @@ class UNetForClassification(nn.Module):
             channels=(16, 32, 64, 128, 256),
             strides=(2, 2, 2, 2)
         )
-        self.global_avg_pool = nn.AdaptiveAvgPool3d(1)  # Global average pooling
-        self.fc = nn.Linear(32, 2)  # Fully connected layer for classification
+        # Global average pooling
+        # This layer converts the feature map into a fixed-size vector by averaging the spatial dimensions.
+        # Adding a global pooling layer before the final fully connected layer can aggregate the features from the spatial dimensions into a single vector suitable for classification.
+        self.global_avg_pool = nn.AdaptiveAvgPool3d(1)  
+        
+        # Fully connected layer for classification
+        # The output from the global pooling layer can be passed through a fully connected layer to get the class scores.
+        # This layer maps the feature vector to the desired number of classes (2 in this case).
+        self.fc = nn.Linear(32, 2)  
 
     def forward(self, x):
         x = self.unet(x)
@@ -264,7 +275,7 @@ class UNetForClassification(nn.Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         #x = F.softmax(x, dim=1) #Ensure the output of your fc layer uses a softmax activation for a proper probability distribution over classes.
-        #x = torch.sigmoid(x) # Use sigmoid activation for binary classification. It ensures that the output is a probability value between 0 and 1, which is appropriate for binary classification.
+        x = torch.sigmoid(x) # Use sigmoid activation for binary classification. It ensures that the output is a probability value between 0 and 1, which is appropriate for binary classification.
         return x
 
 #################################
