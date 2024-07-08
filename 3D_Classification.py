@@ -167,17 +167,9 @@ print("Data after shuffling:")
 for d in data_dicts:
     print(d)
 ##################################
+# DATA SPLIT with the requirement the the testing dataset has the same patches as the one in phase 1!!
 
-# Calculate the number of patches for each set
-num_total = len(data_dicts)
-num_test = max(1, round(num_total * 0.2))
-num_train_val = num_total - num_test
-
-# Split the remaining patches into training and validation
-num_val = max(1, round(num_train_val * 0.2))
-num_train = num_train_val - num_val
-
-# Create the splits
+# Define the test set
 test_files = [
     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_61.nii.gz"},
     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_61.nii.gz"},
@@ -188,18 +180,67 @@ test_files = [
     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_256.nii.gz"},
     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_256.nii.gz"},
 ]
-train_val_files = data_dicts[num_test:]
-train_files = train_val_files[:num_train]
-val_files = train_val_files[num_train:]
+
+# Remove test set files from data_dicts
+test_files_set = set(item["image"] for item in test_files)
+data_dicts = [item for item in data_dicts if item["image"] not in test_files_set]
+
+# Calculate the number of patches for training and validation
+num_total = len(data_dicts)
+num_val = max(1, round(num_total * 0.2))
+num_train = num_total - num_val
+
+# Split the remaining patches into training and validation
+train_files = data_dicts[:num_train]
+val_files = data_dicts[num_train:]
 
 print(f"Total patches: {num_total}")
 print(f"Training patches: {num_train}")
 print(f"Validation patches: {num_val}")
-print(f"Testing patches: {num_test}")
+print(f"Testing patches: {len(test_files)}")
 
 print("Train files:", train_files)
 print("Validation files:", val_files)
 print("Test files:", test_files)
+
+
+
+
+
+
+
+# # Calculate the number of patches for each set
+# num_total = len(data_dicts)
+# num_test = max(1, round(num_total * 0.2))
+# num_train_val = num_total - num_test
+
+# # Split the remaining patches into training and validation
+# num_val = max(1, round(num_train_val * 0.2))
+# num_train = num_train_val - num_val
+
+# # Create the splits
+# test_files = [
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_61.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_61.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_26.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_26.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_40.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_40.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_256.nii.gz"},
+#     {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_256.nii.gz"},
+# ]
+# train_val_files = data_dicts[num_test:]
+# train_files = train_val_files[:num_train]
+# val_files = train_val_files[num_train:]
+
+# print(f"Total patches: {num_total}")
+# print(f"Training patches: {num_train}")
+# print(f"Validation patches: {num_val}")
+# print(f"Testing patches: {num_test}")
+
+# print("Train files:", train_files)
+# print("Validation files:", val_files)
+# print("Test files:", test_files)
 
 
 
