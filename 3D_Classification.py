@@ -285,17 +285,17 @@ print("Define dataset loaders")
 # train_ds = ImageDataset(image_files=shuffled_paths[:7], labels=shuffled_labels[:7], transform=train_transforms) #Creates a dataset object using ImageDataset with the shuffled paths and labels, applying the train_transforms.
 # train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=2, pin_memory=pin_memory) #Creates a data loader for the dataset. pin_memory=pin_memory enables pinned memory if a GPU is available.
 train_ds = Dataset(data=train_files, transform=train_transforms)
-train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=4)#, pin_memory=pin_memory)
+train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)#, pin_memory=pin_memory)
 
 # Create a validation data loader
 # val_ds = ImageDataset(image_files=shuffled_paths[-3:], labels=shuffled_labels[-3:], transform=val_transforms)
 # val_loader = DataLoader(val_ds, batch_size=4, num_workers=2, pin_memory=pin_memory)
 val_ds = Dataset(data=val_files, transform=val_transforms)
-val_loader = DataLoader(val_ds, batch_size=4, num_workers=2)#, pin_memory=pin_memory)
+val_loader = DataLoader(val_ds, batch_size=2, num_workers=2)#, pin_memory=pin_memory)
 
 # Create a testing data loader
 test_ds = Dataset(data=test_files, transform=test_transforms)
-test_loader = DataLoader(test_ds, batch_size=4, num_workers=2)
+test_loader = DataLoader(test_ds, batch_size=2, num_workers=2)
 
 
 # # Check first data loader output
