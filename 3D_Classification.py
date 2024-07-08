@@ -169,16 +169,16 @@ for d in data_dicts:
 ##################################
 # DATA SPLIT with the requirement the the testing dataset has the same patches as the one in phase 1!!
 
-# Define the test set
+# Define the test set with appropriate labels
 test_files = [
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_61.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_61.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_26.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_26.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_40.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_40.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_256.nii.gz"},
-    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_256.nii.gz"},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_61.nii.gz", "label": torch.tensor([1., 0.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_61.nii.gz", "label": torch.tensor([0., 1.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_26.nii.gz", "label": torch.tensor([1., 0.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_26.nii.gz", "label": torch.tensor([0., 1.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_40.nii.gz", "label": torch.tensor([1., 0.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_40.nii.gz", "label": torch.tensor([0., 1.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/bg/patchvolume_256.nii.gz", "label": torch.tensor([1., 0.])},
+    {"image": "/lustre/groups/iterm/Hazem/MA/data/4x/raw/patchvolume_256.nii.gz", "label": torch.tensor([0., 1.])},
 ]
 
 # Remove test set files from data_dicts
@@ -262,7 +262,7 @@ test_transforms = Compose([
     SpatialPadd(keys=["image"], spatial_size=(320, 320, 320), mode='reflect'),
     #Lambda(print_shape),
     #RandRotate90(),
-    ToTensord(keys=["image"]) # Only apply transformations to the image key #Since the test set does not have labels, you should modify the test transforms to only apply the transformations to the image key.
+    ToTensord(keys=["image", "label"])
 ])
 ##################################
 print("Define dataset loaders")
