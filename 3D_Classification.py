@@ -399,7 +399,7 @@ best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
 writer = SummaryWriter()
-max_epochs = 500 #test --> 500 or 1000
+max_epochs = 1000 #test --> 500 or 1000
 
 
 for epoch in range(max_epochs):
