@@ -497,8 +497,8 @@ print(f"Test accuracy: {test_accuracy:.4f}")
 ## the Runs folder - all in one   
 
 # Save output and error at Runs
-slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output_{best_metric:.4f}_{test_accuracy:.4f}.txt"
-slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error_{best_metric:.4f}_{test_accuracy:.4f}.txt"
+slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output.txt"
+slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error.txt"
 run_slurm_output_file = os.path.join(run_dir, f"3D_Classification_{slurm_job_id}_0_output_{best_metric:.4f}_{test_accuracy:.4f}.txt")
 run_slurm_error_file = os.path.join(run_dir, f"3D_Classification_{slurm_job_id}_0_error_{best_metric:.4f}_{test_accuracy:.4f}.txt")
 
