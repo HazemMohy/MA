@@ -45,7 +45,7 @@ def get_blobs(volume):
     # print("Performing cca...")
     #todo wieder raus
     if np.amax(volume) == 1:
-        volume = volume.astype(np.bool)
+        volume = volume.astype(bool) #changed from np.bool to bool
         labeled_volume = connected_components(volume)
     else:
         print("\tUsing predefined labels...")
