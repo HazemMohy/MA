@@ -1,6 +1,16 @@
 
 import numpy as np
-from cc3d import connected_components
+###
+import subprocess
+import sys
+
+# Install cc3d package if not already installed
+try:
+    import cc3d
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "connected-components-3d"])
+finally:
+    from cc3d import connected_components
 
 def get_blobs(volume):
     '''
