@@ -92,7 +92,10 @@ def create_instance_scores(path_gt, path_prediction, path_result, network_name):
     columns     = ["Patch", "TP", "FP", "FN", "Precision", "Recall", "Dice"]
     df_scores   = pd.DataFrame(columns=columns)
 
+    
     for item in os.listdir(path_prediction):
+        if not (item.endswith('.nii') or item.endswith('.nii.gz')): #changed - new
+            continue #changed - new
         print(f"Reading {item}")
         # Read the individual patches
         patch_gt        = read_nifti(os.path.join(path_gt, item))
@@ -134,7 +137,7 @@ def create_instance_scores(path_gt, path_prediction, path_result, network_name):
     return df_scores
 
 # Name of your network
-network_name    = "Hazem_Test"
+network_name    = "Hazem_Test_2"
 
 # Paths 
 path_gt         = "/lustre/groups/iterm/Hazem/MA/Runs/run_21121056__DiceCELoss_none/Rami_Voxel_gt" # Path to ground truth
