@@ -1,5 +1,7 @@
 
 ##############################################################################################################################################################
+from Classification_3D import UNetForClassification
+##############################################################################################################################################################
 
 # STEP 1: Creating instances of the classification and segmentation models (FRAGE !!)
 classification_model = UNetForClassification()  
