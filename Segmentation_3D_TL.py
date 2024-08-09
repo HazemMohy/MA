@@ -1,11 +1,23 @@
 
 ##############################################################################################################################################################
 from Classification_3D import UNetForClassification
+
+from monai.networks.nets import UNet
+import torch
 ##############################################################################################################################################################
 
 # STEP 1: Creating instances of the classification and segmentation models (FRAGE !!)
 classification_model = UNetForClassification()  
-segmentation_model = UNetForSegmentation() 
+segmentation_model = UNet(
+    spatial_dims=3,
+    in_channels=2,  # Adjust this based on how many input channels your segmentation tasks use
+    out_channels=1,  # Typically 1 for binary segmentation tasks
+    channels=(16, 32, 64, 128, 256),
+    strides=(2, 2, 2, 2),
+    num_res_units=2,
+    norm='BATCH' #oder norm = Norm.Batch
+).to(device) # oder to(torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
+
 
 # STEP 2: Loading the pretrained/saved weights into the classification model from a file. (FRAGE !!)
 classification_model.load_state_dict(torch.load('path_to_classification_model_weights.pth'))
