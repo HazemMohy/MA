@@ -6,7 +6,7 @@ from monai.networks.nets import UNet
 import torch
 ##############################################################################################################################################################
 
-# STEP 1: Creating instances of the classification and segmentation models (FRAGE !!)
+# STEP 1: Creating instances of the classification and segmentation models (FRAGE !! DONE!)
 classification_model = UNetForClassification()  
 segmentation_model = UNet(
     spatial_dims=3,
