@@ -103,7 +103,7 @@ os.makedirs(run_dir, exist_ok=True)
 
 
 # Define the path to save the best model
-save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}.pth")
+#save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}.pth")
 ##################################
 
 
@@ -463,7 +463,8 @@ for epoch in range(max_epochs):
         if metric > best_metric:
             best_metric = metric
             best_metric_epoch = epoch + 1
-            torch.save(model.state_dict(), save_path)
+            torch.save(model.state_dict(), "best_metric_model_classification3d_array.pth")
+            #torch.save(model.state_dict(), save_path)
             print("saved new best metric model")
 
         print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
@@ -479,8 +480,8 @@ print("Testing started!")
 # test data loader already created
 
 # Load the best model
-#model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
-model.load_state_dict(torch.load(save_path))
+model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
+#model.load_state_dict(torch.load(save_path))
 model.eval()
 
 num_correct = 0.0
