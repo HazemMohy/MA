@@ -479,7 +479,8 @@ print("Testing started!")
 # test data loader already created
 
 # Load the best model
-model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
+#model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
+model.load_state_dict(torch.load(save_path))
 model.eval()
 
 num_correct = 0.0
