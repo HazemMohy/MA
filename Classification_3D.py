@@ -404,7 +404,7 @@ best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
 writer = SummaryWriter()
-max_epochs = 500 #test --> 500 or 1000
+max_epochs = 50 #test --> 500 or 1000 (I want the real one to be 2000 but I get always a CUDA_Memory_Error)
 
 
 for epoch in range(max_epochs):
