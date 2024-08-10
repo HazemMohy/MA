@@ -91,14 +91,19 @@ device = torch.device("cuda:0")
 #SLURM_JOB_ID
 slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
 
-
+#"Runs" directory
 runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
 os.makedirs(runs_dir, exist_ok=True)
 
+#specific "Run" directory for a specific run
 #run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}"
 run_folder_name = f"run_{slurm_job_id}__Phase_2"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
+
+
+# Define the path to save the best model
+save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}.pth")
 ##################################
 
 
@@ -399,7 +404,7 @@ best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
 writer = SummaryWriter()
-max_epochs = 2000 #test --> 500 or 1000
+max_epochs = 500 #test --> 500 or 1000
 
 
 for epoch in range(max_epochs):
@@ -458,7 +463,7 @@ for epoch in range(max_epochs):
         if metric > best_metric:
             best_metric = metric
             best_metric_epoch = epoch + 1
-            torch.save(model.state_dict(), "best_metric_model_classification3d_array.pth")
+            torch.save(model.state_dict(), save_path)
             print("saved new best metric model")
 
         print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
