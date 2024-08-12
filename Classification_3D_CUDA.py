@@ -66,6 +66,7 @@ from scipy.ndimage import zoom
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.cuda import amp
 ##############################################################################################################################################################################
 #new imports
 
@@ -397,6 +398,14 @@ print("Create Optimizer")
 learning_rate = 1e-4
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
+# print("Training and Evaluation started!")
+# val_interval = 20
+# best_metric = -1
+# best_metric_epoch = -1
+# epoch_loss_values = []
+# metric_values = []
+# writer = SummaryWriter()
+# max_epochs = 50 #test --> 500 or 1000 (I want the real one to be 2000 but I get always a CUDA_OutOfMemory_Error)
 print("Training and Evaluation started!")
 val_interval = 20
 best_metric = -1
@@ -404,9 +413,17 @@ best_metric_epoch = -1
 epoch_loss_values = []
 metric_values = []
 writer = SummaryWriter()
-max_epochs = 50 #test --> 500 or 1000 (I want the real one to be 2000 but I get always a CUDA_OutOfMemory_Error)
+max_epochs = 50 # Adjust as needed
+batch_size = 2 # decrease
+scaler = amp.GradScaler()  # For mixed precision training
 
 
+# for epoch in range(max_epochs):
+#     print("-" * 10)
+#     print(f"epoch {epoch + 1}/{max_epochs}")
+#     model.train()
+#     epoch_loss = 0
+#     step = 0
 for epoch in range(max_epochs):
     print("-" * 10)
     print(f"epoch {epoch + 1}/{max_epochs}")
@@ -414,22 +431,44 @@ for epoch in range(max_epochs):
     epoch_loss = 0
     step = 0
 
+    # for batch_data in train_loader:
+    #     step += 1
+    #     #inputs, labels = batch_data[0].to(device), batch_data[1].to(device) #!!!!!!!! --> inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+    #     inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+    #     #labels = labels.argmax(dim=1).float().unsqueeze(1)  #OLD 
+    #     #Ensure that the output handling in the training and evaluation loops matches the expected format for the loss function and accuracy computation.
+    #     labels = labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification # BCEWithLogitsLoss expects single value labels # Convert one-hot to single value
+    #     optimizer.zero_grad()
+    #     outputs = model(inputs)
+    #     #loss = loss_function(outputs, labels) #!!!!!!!! --> loss = loss_function(outputs, labels.argmax(dim=1))
+    #     #CrossEntropyLoss: This loss function expects the target labels to be in class indices (not one-hot encoded). If your labels are one-hot encoded, you need to convert them back to class indices using labels.argmax(dim=1).
+    #     #HERE: BCELoss or BCEWithLogitsLoss (you can use labels DIRECTLY): These loss functions can work directly with one-hot encoded labels or multi-label binary classification problems. If your network outputs match the shape and form of your one-hot encoded labels, you can use them directly.
+    #     #loss = loss_function(outputs, labels.argmax(dim=1)) #OLD
+    #     loss = loss_function(outputs, labels)  # Use BCEWithLogitsLoss which expects single value labels
+    #     loss.backward()
+    #     optimizer.step()
+    #     epoch_loss += loss.item()
+    #     epoch_len = len(train_ds) // train_loader.batch_size
+    #     print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
+    #     writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
     for batch_data in train_loader:
         step += 1
-        #inputs, labels = batch_data[0].to(device), batch_data[1].to(device) #!!!!!!!! --> inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
         inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
-        #labels = labels.argmax(dim=1).float().unsqueeze(1)  #OLD 
-        #Ensure that the output handling in the training and evaluation loops matches the expected format for the loss function and accuracy computation.
-        labels = labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification # BCEWithLogitsLoss expects single value labels # Convert one-hot to single value
+        labels = labels[:, 1].unsqueeze(1)
         optimizer.zero_grad()
-        outputs = model(inputs)
-        #loss = loss_function(outputs, labels) #!!!!!!!! --> loss = loss_function(outputs, labels.argmax(dim=1))
-        #CrossEntropyLoss: This loss function expects the target labels to be in class indices (not one-hot encoded). If your labels are one-hot encoded, you need to convert them back to class indices using labels.argmax(dim=1).
-        #HERE: BCELoss or BCEWithLogitsLoss (you can use labels DIRECTLY): These loss functions can work directly with one-hot encoded labels or multi-label binary classification problems. If your network outputs match the shape and form of your one-hot encoded labels, you can use them directly.
-        #loss = loss_function(outputs, labels.argmax(dim=1)) #OLD
-        loss = loss_function(outputs, labels)  # Use BCEWithLogitsLoss which expects single value labels
-        loss.backward()
-        optimizer.step()
+
+        # Using automatic mixed precision
+        with amp.autocast():
+            outputs = model(inputs)
+            loss = loss_function(outputs, labels)
+
+        # Scales the loss, and calls backward() to create scaled gradients
+        scaler.scale(loss).backward()
+        # Unscales the gradients of optimizer's assigned params in-place
+        scaler.step(optimizer)
+        # Updates the scale for next iteration
+        scaler.update()
+
         epoch_loss += loss.item()
         epoch_len = len(train_ds) // train_loader.batch_size
         print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
@@ -440,39 +479,76 @@ for epoch in range(max_epochs):
     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
     if (epoch + 1) % val_interval == 0:
-        model.eval()
-
-        num_correct = 0.0
-        metric_count = 0
-        for val_data in val_loader:
-            #val_images, val_labels = val_data[0].to(device), val_data[1].to(device) #!!!!!!!!! ---> val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
-            val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
-            #NIX #OLD
-            val_labels = val_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
-            #val_labels = val_labels.argmax(dim=1).float().unsqueeze(1)  # Convert one-hot to single value
-            with torch.no_grad():
-                val_outputs = model(val_images)
-                #value = torch.eq(val_outputs.argmax(dim=1), val_labels.argmax(dim=1)) #OLD
-                value = torch.eq((val_outputs > 0.5).float(), val_labels)  # Compare with threshold 0.5
-                metric_count += len(value)
-                num_correct += value.sum().item()
-
-        metric = num_correct / metric_count
-        metric_values.append(metric)
-
-        if metric > best_metric:
-            best_metric = metric
-            best_metric_epoch = epoch + 1
-            #torch.save(model.state_dict(), "best_metric_model_classification3d_array.pth")
-            torch.save(model.state_dict(), save_path)
-            print("saved new best metric model")
-
-        print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
-        print(f"Best accuracy: {best_metric:.4f} at epoch {best_metric_epoch}")
-        writer.add_scalar("val_accuracy", metric, epoch + 1)
+        evaluate_and_save_model(model, val_loader, device, epoch, save_path, best_metric, writer)
 
 print(f"Training completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
 writer.close()
+
+#outside the training loop
+def evaluate_and_save_model(model, val_loader, device, epoch, save_path, best_metric, writer):
+    model.eval()
+    num_correct = 0.0
+    metric_count = 0
+    for val_data in val_loader:
+        val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+        val_labels = val_labels[:, 1].unsqueeze(1)
+        with torch.no_grad():
+            val_outputs = model(val_images)
+            value = torch.eq((val_outputs > 0.5).float(), val_labels)
+            metric_count += len(value)
+            num_correct += value.sum().item()
+
+    metric = num_correct / metric_count
+    metric_values.append(metric)
+
+    if metric > best_metric:
+        best_metric = metric
+        best_metric_epoch = epoch + 1
+        torch.save(model.state_dict(), save_path)
+        print("saved new best metric model")
+
+    print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
+    print(f"Best accuracy: {best_metric:.4f} at epoch {best_metric_epoch}")
+    writer.add_scalar("val_accuracy", metric, epoch + 1)
+
+    # epoch_loss /= step
+    # epoch_loss_values.append(epoch_loss)
+    # print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+
+#     if (epoch + 1) % val_interval == 0:
+#         model.eval()
+
+#         num_correct = 0.0
+#         metric_count = 0
+#         for val_data in val_loader:
+#             #val_images, val_labels = val_data[0].to(device), val_data[1].to(device) #!!!!!!!!! ---> val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+#             val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+#             #NIX #OLD
+#             val_labels = val_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
+#             #val_labels = val_labels.argmax(dim=1).float().unsqueeze(1)  # Convert one-hot to single value
+#             with torch.no_grad():
+#                 val_outputs = model(val_images)
+#                 #value = torch.eq(val_outputs.argmax(dim=1), val_labels.argmax(dim=1)) #OLD
+#                 value = torch.eq((val_outputs > 0.5).float(), val_labels)  # Compare with threshold 0.5
+#                 metric_count += len(value)
+#                 num_correct += value.sum().item()
+
+#         metric = num_correct / metric_count
+#         metric_values.append(metric)
+
+#         if metric > best_metric:
+#             best_metric = metric
+#             best_metric_epoch = epoch + 1
+#             #torch.save(model.state_dict(), "best_metric_model_classification3d_array.pth")
+#             torch.save(model.state_dict(), save_path)
+#             print("saved new best metric model")
+
+#         print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
+#         print(f"Best accuracy: {best_metric:.4f} at epoch {best_metric_epoch}")
+#         writer.add_scalar("val_accuracy", metric, epoch + 1)
+
+# print(f"Training completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
+# writer.close()
 ##################################
 print("-" * 40)
 print("Testing started!")
