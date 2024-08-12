@@ -33,6 +33,14 @@ state_dict = classification_model.state_dict()
 state_dict.pop('fc.weight', None)  # Remove fully connected layer weights
 state_dict.pop('fc.bias', None)
 
+# HOPEFULLY, the solution:
+for name, param in classification_model.state_dict().items():
+    print(name)
+
+for name, param in segmentation_model.state_dict().items():
+    print(name)
+
+
 # STEP 3.3.: Load the modified state_dict into segmentation_model
 segmentation_model.load_state_dict(state_dict, strict=False)
 
