@@ -43,14 +43,14 @@ state_dict = classification_model.state_dict()
 
 # print the keys of the state_dict for both models to see what the layer names are in the 2 models 
 # This will give a list of all the parameter names and help identify which ones correspond to each other between the two models. 
-for name, param in classification_model.state_dict().items():
-    print(name)
+# for name, param in classification_model.state_dict().items():
+#     print(name)
 print("Classification Model Parameters:")
 for name, param in classification_model.named_parameters(): # Print parameter names and shapes for the classification model
     print(f"{name}: {param.shape}")
 
-for name, param in segmentation_model.state_dict().items():
-    print(name)
+# for name, param in segmentation_model.state_dict().items():
+#     print(name)
 print("Segmentation Model Parameters:")
 for name, param in segmentation_model.named_parameters(): # Print parameter names and shapes for the segmentation model
     print(f"{name}: {param.shape}")
