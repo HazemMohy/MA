@@ -30,10 +30,10 @@ classification_model.load_state_dict(torch.load(path))
 # STEP 3.1.: Copy the state_dict from classification_model
 state_dict = classification_model.state_dict()
 
-# STEP 3.2.: Remove the final layer weights from the state_dict if they do not match in segmentation_model
-# Adjust the key names based on your actual model's layer names (FRAGE !!)
-state_dict.pop('fc.weight', None)  # Remove fully connected layer weights
-state_dict.pop('fc.bias', None)
+# # STEP 3.2.: Remove the final layer weights from the state_dict if they do not match in segmentation_model
+# # Adjust the key names based on your actual model's layer names (FRAGE !!)
+# state_dict.pop('fc.weight', None)  # Remove fully connected layer weights
+# state_dict.pop('fc.bias', None)
 
 # HOPEFULLY, the solution:
 # for name, param in classification_model.state_dict().items():
