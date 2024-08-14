@@ -23,4 +23,4 @@ echo "env activated"
 export CUDA_LAUNCH_BLOCKING=1
 echo "CUDA_LAUNCH_BLOCKING set to 1"
 
-srun python -u Segmentation_3D_TL.py --job $SLURM_JOB_ID
+srun python -u hello.py --job $SLURM_JOB_ID
