@@ -45,9 +45,15 @@ state_dict = classification_model.state_dict()
 # This will give a list of all the parameter names and help identify which ones correspond to each other between the two models. 
 for name, param in classification_model.state_dict().items():
     print(name)
+print("Classification Model Parameters:")
+for name, param in classification_model.named_parameters(): # Print parameter names and shapes for the classification model
+    print(f"{name}: {param.shape}")
 
 for name, param in segmentation_model.state_dict().items():
     print(name)
+print("Segmentation Model Parameters:")
+for name, param in segmentation_model.named_parameters(): # Print parameter names and shapes for the segmentation model
+    print(f"{name}: {param.shape}")
 
 # knowing the names, check the shape of the weights in both: the segmentation model and the classification model
 # shape of weights/layer weights/tensor --> ChannelsxBatchxHeightxWidthxDepth (Batch is not important. The most relevant here is "Channels" for both: in_channels & out_channels)
