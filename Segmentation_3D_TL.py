@@ -45,12 +45,14 @@ state_dict = classification_model.state_dict()
 # This will give a list of all the parameter names and help identify which ones correspond to each other between the two models. 
 # for name, param in classification_model.state_dict().items():
 #     print(name)
-print("Classification Model Parameters:")
-for name, param in classification_model.named_parameters(): # Print parameter names and shapes for the classification model
-    print(f"{name}: {param.shape}")
+print("Classification Model Parameters:") # Print parameter names and shapes for the classification model
+for name, param in classification_model.named_parameters(): #This function iterates over each parameter in the model, where it returns a tuple containing the name of the parameter and the parameter tensor itself.
+    print(f"{name}: {param.shape}") # param.shape returns the shape of the tensor, which is CRUCIAL for understanding how parameters align between the two models.
+# iterates over all the parameters that are intended to be updated during training (i.e., parameters for which gradients will be computed).
+# often used when it is needed to manipulate or specifically check trainable parameters, such as freezing certain layers or applying different strategies for different parameters during optimization.
 
-# for name, param in segmentation_model.state_dict().items():
-#     print(name)
+# for name, param in segmentation_model.state_dict().items(): #print out all the parameters (weights and biases) in the model's state dictionary, including those that might not require gradients (i.e., non-trainable parameters if any).
+#     print(name) #It returns a dictionary containing a whole state of the module, including not only parameters but potentially buffers and other states as well.
 print("Segmentation Model Parameters:")
 for name, param in segmentation_model.named_parameters(): # Print parameter names and shapes for the segmentation model
     print(f"{name}: {param.shape}")
@@ -82,3 +84,23 @@ for name, param in segmentation_model.named_parameters(): # Print parameter name
 
 
 ##############################################################################################################################################################
+# possibble outcomes and solution for undesired scenario:
+# 1. Compare Shapes: Look at the output of this script to compare the shapes of corresponding layers in the two models. The shapes will tell which
+# layers can potentially have their weights transferred directly.
+# 2.
+# 2.1. If the shapes match, transfer learning can be DIRECTLY applied.
+# 2.2. If they don't, some engineering will be needed! --> either skip those layers (nah!) or adapt the weights programmatically (by averaging or reshaping).
+
+# what engineering will be needed?
+# 
+
+
+
+
+# state_dict().items VS named_parameters()
+# use named_parameters() --> If ONLY interested in the trainable parameters (those for which gradients are computed).
+#   This is useful, for example, when you want to freeze certain layers or apply different optimization strategies.
+#   This directly addresses the need to understand the trainable parameters within your model, which are the main focus when considering transfer learning.
+# use state_dict().items() --> when you want to save/load the model state, OR when you need a comprehensive view of all parameters and buffers,
+#   regardless of whether they are trainable.
+# VORGEHEN --> for checking the names & shapes, I will use named_parameters(). THEN at saving/loading the model state, I will probably use state_dict().
