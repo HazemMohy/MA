@@ -19,8 +19,10 @@ segmentation_model = UNet(
 ).to(device) # oder to(torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
 
 
-# STEP 2: Loading the pretrained/saved weights into the classification model from a file. (FRAGE !!)
-classification_model.load_state_dict(torch.load('path_to_classification_model_weights.pth'))
+# STEP 2: Loading the pretrained/saved weights into the classification model from a file. (FRAGE !! DONE!)
+# path = path_to_classification_model_weights.pth
+path = "/lustre/groups/iterm/Hazem/MA/Runs/run_24144642__Phase_2/best_metric_model_classification3d_array_24144642.pth"
+classification_model.load_state_dict(torch.load(path))
 
 # STEP 3: Transfer Weights
 # Transfer the weights from the classification model to the segmentation model (skipping any non-matching layers like the final layer OR focusing ONLY on the encoder OR ONLY the encoder&bottle-neck)
