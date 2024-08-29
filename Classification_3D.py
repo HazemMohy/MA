@@ -394,7 +394,7 @@ loss_function = torch.nn.BCEWithLogitsLoss()  # Use BCEWithLogitsLoss for binary
 #loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
 
 print("Create Optimizer")
-learning_rate = 1e-4
+learning_rate = 1e-3
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
 print("Training and Evaluation started!")
