@@ -5,6 +5,11 @@ from Classification_3D import UNetForClassification
 from monai.networks.nets import UNet
 import torch
 ##############################################################################################################################################################
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+##############################################################################################################################################################
+
 
 # STEP 1: Creating instances of the classification and segmentation models (FRAGE !! DONE!)
 classification_model = UNetForClassification()  
@@ -22,13 +27,13 @@ segmentation_model = UNet(
 # STEP 2: Loading the pretrained/saved weights into the classification model from a file. (FRAGE !! DONE!)
 # path = path_to_classification_model_weights.pth
 path = "/lustre/groups/iterm/Hazem/MA/Runs/run_27339286__Phase_2/best_metric_model_classification3d_array_27339286_50_0.001.pth" #really the best one --> testing score = 75% (Evaluation score = 83%)
-classification_model.load_state_dict(torch.load(path))
+classification_model.load_state_dict(torch.load(path)) #(torch.load(path, map_location=device)), if mapping is necessary
 
 # STEP 3: Transfer Weights
 # Transfer the weights from the classification model to the segmentation model (skipping any non-matching layers like the final layer OR focusing ONLY on the encoder OR ONLY the encoder&bottle-neck)
 
 # STEP 3.1.: Copy the state_dict from classification_model
-state_dict = classification_model.state_dict()
+state_dict = classification_model.state_dict() # I need it for later = transfer learning
 # an example approach to filter out only encoder weights (LATER)
 # state_dict = {key: value for key, value in classification_model.state_dict().items() if 'fc' not in key}  # Assuming 'fc' is the fully connected layer
 
