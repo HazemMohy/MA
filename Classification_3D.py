@@ -409,115 +409,120 @@ max_epochs = 50 #test --> 500 or 1000 (I want the real one to be 2000 but I get 
 # Define the path to save the best model
 save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}_{max_epochs}_{learning_rate}.pth")
 
+#################################
+if __name__ == "__main__": #to avoid runnig the whole script, while I just need to import the model
+    
+#################################
 
-for epoch in range(max_epochs):
-    print("-" * 10)
-    print(f"epoch {epoch + 1}/{max_epochs}")
-    model.train()
-    epoch_loss = 0
-    step = 0
 
-    for batch_data in train_loader:
-        step += 1
-        #inputs, labels = batch_data[0].to(device), batch_data[1].to(device) #!!!!!!!! --> inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
-        inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
-        #labels = labels.argmax(dim=1).float().unsqueeze(1)  #OLD 
-        #Ensure that the output handling in the training and evaluation loops matches the expected format for the loss function and accuracy computation.
-        labels = labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification # BCEWithLogitsLoss expects single value labels # Convert one-hot to single value
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        #loss = loss_function(outputs, labels) #!!!!!!!! --> loss = loss_function(outputs, labels.argmax(dim=1))
-        #CrossEntropyLoss: This loss function expects the target labels to be in class indices (not one-hot encoded). If your labels are one-hot encoded, you need to convert them back to class indices using labels.argmax(dim=1).
-        #HERE: BCELoss or BCEWithLogitsLoss (you can use labels DIRECTLY): These loss functions can work directly with one-hot encoded labels or multi-label binary classification problems. If your network outputs match the shape and form of your one-hot encoded labels, you can use them directly.
-        #loss = loss_function(outputs, labels.argmax(dim=1)) #OLD
-        loss = loss_function(outputs, labels)  # Use BCEWithLogitsLoss which expects single value labels
-        loss.backward()
-        optimizer.step()
-        epoch_loss += loss.item()
-        epoch_len = len(train_ds) // train_loader.batch_size
-        print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
-        writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
+    for epoch in range(max_epochs):
+        print("-" * 10)
+        print(f"epoch {epoch + 1}/{max_epochs}")
+        model.train()
+        epoch_loss = 0
+        step = 0
 
-    epoch_loss /= step
-    epoch_loss_values.append(epoch_loss)
-    print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+        for batch_data in train_loader:
+            step += 1
+            #inputs, labels = batch_data[0].to(device), batch_data[1].to(device) #!!!!!!!! --> inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+            inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+            #labels = labels.argmax(dim=1).float().unsqueeze(1)  #OLD 
+            #Ensure that the output handling in the training and evaluation loops matches the expected format for the loss function and accuracy computation.
+            labels = labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification # BCEWithLogitsLoss expects single value labels # Convert one-hot to single value
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            #loss = loss_function(outputs, labels) #!!!!!!!! --> loss = loss_function(outputs, labels.argmax(dim=1))
+            #CrossEntropyLoss: This loss function expects the target labels to be in class indices (not one-hot encoded). If your labels are one-hot encoded, you need to convert them back to class indices using labels.argmax(dim=1).
+            #HERE: BCELoss or BCEWithLogitsLoss (you can use labels DIRECTLY): These loss functions can work directly with one-hot encoded labels or multi-label binary classification problems. If your network outputs match the shape and form of your one-hot encoded labels, you can use them directly.
+            #loss = loss_function(outputs, labels.argmax(dim=1)) #OLD
+            loss = loss_function(outputs, labels)  # Use BCEWithLogitsLoss which expects single value labels
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+            epoch_len = len(train_ds) // train_loader.batch_size
+            print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
+            writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
 
-    if (epoch + 1) % val_interval == 0:
-        model.eval()
+        epoch_loss /= step
+        epoch_loss_values.append(epoch_loss)
+        print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
-        num_correct = 0.0
-        metric_count = 0
-        for val_data in val_loader:
-            #val_images, val_labels = val_data[0].to(device), val_data[1].to(device) #!!!!!!!!! ---> val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
-            val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
-            #NIX #OLD
-            val_labels = val_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
-            #val_labels = val_labels.argmax(dim=1).float().unsqueeze(1)  # Convert one-hot to single value
-            with torch.no_grad():
-                val_outputs = model(val_images)
-                #value = torch.eq(val_outputs.argmax(dim=1), val_labels.argmax(dim=1)) #OLD
-                value = torch.eq((val_outputs > 0.5).float(), val_labels)  # Compare with threshold 0.5
-                metric_count += len(value)
-                num_correct += value.sum().item()
+        if (epoch + 1) % val_interval == 0:
+            model.eval()
 
-        metric = num_correct / metric_count
-        metric_values.append(metric)
+            num_correct = 0.0
+            metric_count = 0
+            for val_data in val_loader:
+                #val_images, val_labels = val_data[0].to(device), val_data[1].to(device) #!!!!!!!!! ---> val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+                val_images, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+                #NIX #OLD
+                val_labels = val_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
+                #val_labels = val_labels.argmax(dim=1).float().unsqueeze(1)  # Convert one-hot to single value
+                with torch.no_grad():
+                    val_outputs = model(val_images)
+                    #value = torch.eq(val_outputs.argmax(dim=1), val_labels.argmax(dim=1)) #OLD
+                    value = torch.eq((val_outputs > 0.5).float(), val_labels)  # Compare with threshold 0.5
+                    metric_count += len(value)
+                    num_correct += value.sum().item()
 
-        if metric > best_metric:
-            best_metric = metric
-            best_metric_epoch = epoch + 1
-            #torch.save(model.state_dict(), "best_metric_model_classification3d_array.pth")
-            torch.save(model.state_dict(), save_path)
-            print("saved new best metric model")
+            metric = num_correct / metric_count
+            metric_values.append(metric)
 
-        print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
-        print(f"Best accuracy: {best_metric:.4f} at epoch {best_metric_epoch}")
-        writer.add_scalar("val_accuracy", metric, epoch + 1)
+            if metric > best_metric:
+                best_metric = metric
+                best_metric_epoch = epoch + 1
+                #torch.save(model.state_dict(), "best_metric_model_classification3d_array.pth")
+                torch.save(model.state_dict(), save_path)
+                print("saved new best metric model")
 
-print(f"Training completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
-writer.close()
-##################################
-print("-" * 40)
-print("Testing started!")
+            print(f"Current epoch: {epoch+1} current accuracy: {metric:.4f} ")
+            print(f"Best accuracy: {best_metric:.4f} at epoch {best_metric_epoch}")
+            writer.add_scalar("val_accuracy", metric, epoch + 1)
 
-# test data loader already created
+    print(f"Training completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
+    writer.close()
+    ##################################
+    print("-" * 40)
+    print("Testing started!")
 
-# Load the best model
-#model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
-model.load_state_dict(torch.load(save_path))
-model.eval()
+    # test data loader already created
 
-num_correct = 0.0
-metric_count = 0
+    # Load the best model
+    #model.load_state_dict(torch.load("best_metric_model_classification3d_array.pth"))
+    model.load_state_dict(torch.load(save_path))
+    model.eval()
 
-with torch.no_grad():
-    for test_data in test_loader:
-        test_images, test_labels = test_data["image"].to(device), test_data["label"].to(device)
-        test_labels = test_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
-        test_outputs = model(test_images)
-        value = torch.eq((test_outputs > 0.5).float(), test_labels)  # Compare with threshold 0.5
-        metric_count += len(value)
-        num_correct += value.sum().item()
+    num_correct = 0.0
+    metric_count = 0
 
-test_accuracy = num_correct / metric_count
+    with torch.no_grad():
+        for test_data in test_loader:
+            test_images, test_labels = test_data["image"].to(device), test_data["label"].to(device)
+            test_labels = test_labels[:, 1].unsqueeze(1)  # Use only the positive class for binary classification
+            test_outputs = model(test_images)
+            value = torch.eq((test_outputs > 0.5).float(), test_labels)  # Compare with threshold 0.5
+            metric_count += len(value)
+            num_correct += value.sum().item()
 
-print(f"Test accuracy: {test_accuracy:.4f}")
+    test_accuracy = num_correct / metric_count
 
-##################################
-## the Runs folder - all in one   
+    print(f"Test accuracy: {test_accuracy:.4f}")
 
-# Save output and error at Runs
-slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output.txt"
-slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error.txt"
-run_slurm_output_file = os.path.join(run_dir, f"3D_Classification_{slurm_job_id}_0_output_{best_metric:.4f}_{best_metric_epoch}_{test_accuracy:.4f}.txt")
-run_slurm_error_file = os.path.join(run_dir, f"3D_Classification_{slurm_job_id}_0_error_{best_metric:.4f}_{best_metric_epoch}_{test_accuracy:.4f}.txt")
+    ##################################
+    ## the Runs folder - all in one   
 
-shutil.copy(slurm_output_file, run_slurm_output_file)
-shutil.copy(slurm_error_file, run_slurm_error_file)
-print(f"Slurm output file copied to {run_slurm_output_file}")
-print(f"Slurm error file copied to {run_slurm_error_file}")
+    # Save output and error at Runs
+    slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output.txt"
+    slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error.txt"
+    run_slurm_output_file = os.path.join(run_dir, f"3D_Classification_{slurm_job_id}_0_output_{best_metric:.4f}_{best_metric_epoch}_{test_accuracy:.4f}.txt")
+    run_slurm_error_file = os.path.join(run_dir, f"3D_Classification_{slurm_job_id}_0_error_{best_metric:.4f}_{best_metric_epoch}_{test_accuracy:.4f}.txt")
 
-##################################
-#final print
-print("-" * 40)
-print("ALL DONE!") 
+    shutil.copy(slurm_output_file, run_slurm_output_file)
+    shutil.copy(slurm_error_file, run_slurm_error_file)
+    print(f"Slurm output file copied to {run_slurm_output_file}")
+    print(f"Slurm error file copied to {run_slurm_error_file}")
+
+    ##################################
+    #final print
+    print("-" * 40)
+    print("ALL DONE!") 
