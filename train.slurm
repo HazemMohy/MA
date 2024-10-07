@@ -5,12 +5,12 @@
 #SBATCH --output=/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_%j_output.txt
 #SBATCH --error=/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_%j_error.txt
 #SBATCH -p gpu_p
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:1
 #SBATCH --mem=160G
 #SBATCH --time=00:29:00
 #SBATCH --nice=1
 #SBATCH --qos=gpu_priority
-##SBATCH -w supergpu05
+#SBATCH -w supergpu07
 
 
 source /lustre/groups/iterm/Hazem/miniconda3/bin/activate Masterarbeit
