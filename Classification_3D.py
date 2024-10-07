@@ -102,8 +102,8 @@ run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
 
 
-# Define the path to save the best model
-save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}_{max_epochs}_{learning_rate}.pth")
+# # Define the path to save the best model
+# save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}_{max_epochs}_{learning_rate}.pth")
 ##################################
 
 
@@ -405,6 +405,9 @@ epoch_loss_values = []
 metric_values = []
 writer = SummaryWriter()
 max_epochs = 500 #test --> 500 or 1000 (I want the real one to be 2000 but I get always a CUDA_OutOfMemory_Error)
+
+# Define the path to save the best model
+save_path = os.path.join(run_dir, f"best_metric_model_classification3d_array_{slurm_job_id}_{max_epochs}_{learning_rate}.pth")
 
 
 for epoch in range(max_epochs):
