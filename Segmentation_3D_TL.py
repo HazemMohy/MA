@@ -21,7 +21,7 @@ segmentation_model = UNet(
 
 # STEP 2: Loading the pretrained/saved weights into the classification model from a file. (FRAGE !! DONE!)
 # path = path_to_classification_model_weights.pth
-path = "/lustre/groups/iterm/Hazem/MA/Runs/run_24144642__Phase_2/best_metric_model_classification3d_array_24144642.pth"
+path = "/lustre/groups/iterm/Hazem/MA/Runs/run_27339286__Phase_2/best_metric_model_classification3d_array_27339286.pth" #really the best one --> testing score = 75% (Evaluation score = 83%)
 classification_model.load_state_dict(torch.load(path))
 
 # STEP 3: Transfer Weights
