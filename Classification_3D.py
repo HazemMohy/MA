@@ -138,12 +138,6 @@ class UNetForClassification(nn.Module):
         #x = F.softmax(x, dim=1) #Ensure the output of your fc layer uses a softmax activation for a proper probability distribution over classes.
         x = torch.sigmoid(x) # Use sigmoid activation for binary classification. It ensures that the output is a probability value between 0 and 1, which is appropriate for binary classification. 
         return x
-
-
-print("Create Model for Classification")
-#model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
-model = UNetForClassification().to(device)
-
 ##################################
 if __name__ == "__main__": #to avoid runnig the whole script, while I just need to import the model
     ##################################
