@@ -384,20 +384,20 @@ class UNetForClassification(nn.Module):
         return x
 
 #################################
-print("Create Model")
+print("Create Model for Classification")
 #model = monai.networks.nets.DenseNet121(spatial_dims=3, in_channels=1, out_channels=2).to(device)
 model = UNetForClassification().to(device)
 
-print("Create Loss")
+print("Create Loss for Classification")
 #loss_function = torch.nn.CrossEntropyLoss() #OLD
 loss_function = torch.nn.BCEWithLogitsLoss()  # Use BCEWithLogitsLoss for binary classification with a single output neuron. This loss function is suitable for binary classification tasks and expects RAW logits (NOT hot-encoded) as input.
 #loss_function = DiceCELoss(include_background=True, to_onehot_y=True, sigmoid=True) #MONAI-DiceCELoss #try softmax #CHANGE #it is NOT PURELY binary cross entropy loss
 
-print("Create Optimizer")
+print("Create Optimizer for Classification")
 learning_rate = 1e-3
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
-print("Training and Evaluation started!")
+print("Training and Evaluation started for Classification!")
 val_interval = 10
 best_metric = -1
 best_metric_epoch = -1
