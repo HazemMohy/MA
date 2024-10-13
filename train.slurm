@@ -10,7 +10,7 @@
 #SBATCH --time=00:29:00
 #SBATCH --nice=1
 #SBATCH --qos=gpu_priority
-#SBATCH -w supergpu06
+##SBATCH -w supergpu06
 
 
 source /lustre/groups/iterm/Hazem/miniconda3/bin/activate Masterarbeit
