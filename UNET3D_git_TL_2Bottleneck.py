@@ -473,7 +473,7 @@ excluded_params = [
 
     # Bottleneck
     # 5th layer parameters
-    'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight',
+    #'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight',
     
     # Decoder Layers
     # 6th layer parameters
