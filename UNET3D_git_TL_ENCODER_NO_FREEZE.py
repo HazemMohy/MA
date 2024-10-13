@@ -92,6 +92,7 @@ scheduler_params = hyperparameters.get("scheduler", None)
 # Extract the chosen scheduler from the hyperparameters
 chosen_scheduler_name = hyperparameters.get("chosen_scheduler", None)
 
+
 # Choose which scheduler to use based on the chosen_scheduler parameter
 chosen_scheduler = scheduler_params.get(chosen_scheduler_name) if scheduler_params and chosen_scheduler_name else None
 
