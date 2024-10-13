@@ -516,10 +516,11 @@ for name, param in classification_state_dict.items():
 
 # Update the segmentation model's state dictionary 
 segmentation_state_dict.update(new_state_dict) #Updates the segmentation model's state dictionary with the transferred parameters.
-model.load_state_dict(segmentation_state_dict) #This line loads the updated segmentation_state_dict (which now includes the transferred weights) into the segmentation model.
+model.load_state_dict(segmentation_state_dict, strict=False) #This line loads the updated segmentation_state_dict (which now includes the transferred weights) into the segmentation model.
 #Use strict=False to avoid errors due to missing keys or unexpected keys. --> model.load_state_dict(segmentation_state_dict, strict=False)
 #Setting strict=False allows the model to load the state dict even if not all keys match. HOWEVER, this method may raise an error if there are unmatched keys, which is
 #likely given that you're not transferring all weights.
+#WARNING: strict=False MUST be included to avoid errors due to missing keys, especially since you're not transferring all weights.
 
 # Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
 # for name, param in model.named_parameters(): 
