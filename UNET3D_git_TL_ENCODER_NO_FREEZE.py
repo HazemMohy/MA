@@ -465,7 +465,7 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 excluded_params = [
     # Encoder Layers
     # 1st layer parameters (ALWAYS EXCLUDED!)
-    'unet.model.0.conv.weight',
+    #'unet.model.0.conv.weight',
     # 2nd layer parameters
     # 3rd layer parameters
     # 4th layer parameters
@@ -501,7 +501,7 @@ for name, param in classification_state_dict.items():
         continue  # Skip excluded parameters
 
     # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
-    seg_name = name.replace('unet.model', 'model')
+    seg_name = name.replace('unet.model.', 'model.')
     seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
 
     # Check if the parameter exists in the segmentation model
@@ -521,9 +521,12 @@ model.load_state_dict(segmentation_state_dict, strict=False) #This line loads th
 #Setting strict=False allows the model to load the state dict even if not all keys match. HOWEVER, this method may raise an error if there are unmatched keys, which is
 #likely given that you're not transferring all weights.
 #WARNING: strict=False MUST be included to avoid errors due to missing keys, especially since you're not transferring all weights.
+#when you are not initializing (transferring) all parameters in the segmentation model, setting strict=False in model.load_state_dict() is necessary.
+#strict=False: Allows the loading process to ignore missing or unexpected keys. && This is suitable when you're only loading a subset of the model's parameters (e.g., when
+#doing transfer learning and not transferring all weights).
 
 # Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
-# for name, param in model.named_parameters(): 
+# for name, param in model.named_parameters(): #Ensure that the parameter names in model.named_parameters() match those in new_state_dict.
 #     if name in new_state_dict:
 #         param.requires_grad = False #you prevent the optimizer from updating these parameters during training.
 #         print(f"Freezing layer: {name}")
