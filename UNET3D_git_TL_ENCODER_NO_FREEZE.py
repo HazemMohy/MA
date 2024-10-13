@@ -390,16 +390,19 @@ model = UNet(
 print("Transfer Learning Block begins!")
 print("Load Pretrained Weights from Classification Model")
 
+# path = path_to_classification_model_weights.pth #I chose really the best one --> testing score = 75% (Evaluation score = 83%)
+path_class_best_metric_model = "/lustre/groups/iterm/Hazem/MA/Runs/run_27339286__Phase_2/best_metric_model_classification3d_array_27339286_50_0.001.pth" 
+
 # Import the classification model
 from Classification_3D import UNetForClassification
 
 # Define and load the classification model
 classification_model = UNetForClassification()
-classification_model.load_state_dict(torch.load(path)) #QUESTION: define path, make it more specified!
-classification_model.to(device)
+classification_model.load_state_dict(torch.load(path_class_best_metric_model)) #QUESTION: define path, make it more specified!
+classification_model.to(device) #QUESTION: what is the use of this line?
 classification_model.eval() #QUESTION: what is the use of this line?
 
-# Get state dictionaries
+# Get state dictionaries of both models: Classification & Segmentation
 classification_state_dict = classification_model.state_dict()
 segmentation_state_dict = model.state_dict()
 
@@ -431,13 +434,15 @@ for name, param in classification_state_dict.items():
 
 # Update the segmentation model's state dictionary 
 segmentation_state_dict.update(new_state_dict)
-model.load_state_dict(segmentation_state_dict) #QUESTION: this is the actual transferring/initialising step?
+model.load_state_dict(segmentation_state_dict) #QUESTION: this is the actual transferring/initialising step? #QUESTION: do I need strict=False in the load_state_dict method, here or anywhere else?
 
 # Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
-for name, param in model.named_parameters(): #QUESTION: this is the right place for this block?
-    if name in new_state_dict:
-        param.requires_grad = False
-        print(f"Freezing layer: {name}")
+# for name, param in model.named_parameters(): #QUESTION: this is the right place for this block?
+#     if name in new_state_dict:
+#         param.requires_grad = False
+#         print(f"Freezing layer: {name}")
+
+
 
 
 # Transfer Learning Code Ends Here
