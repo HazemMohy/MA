@@ -7,9 +7,9 @@
 #SBATCH -p gpu_p
 #SBATCH --gres=gpu:1
 #SBATCH --mem=160G
-#SBATCH --time=00:29:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nice=1
-#SBATCH --qos=gpu_priority
+#SBATCH --qos=gpu_normal
 ##SBATCH -w supergpu06
 
 
