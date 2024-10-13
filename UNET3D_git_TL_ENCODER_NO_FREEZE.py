@@ -127,7 +127,7 @@ os.makedirs(runs_dir, exist_ok=True)
 ##################################
 
 loss_function_name = "DiceCELoss"
-run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}"
+run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}_ECXLUDE_ENCODER"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
 ##################################
