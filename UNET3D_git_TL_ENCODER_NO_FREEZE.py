@@ -385,6 +385,65 @@ model = UNet(
     norm=Norm.BATCH,
 ).to(device)
 ##################################
+##################################
+# Transfer Learning Code Starts Here
+print("Transfer Learning Block begins!")
+print("Load Pretrained Weights from Classification Model")
+
+# Import the classification model
+from Classification_3D import UNetForClassification
+
+# Define and load the classification model
+classification_model = UNetForClassification()
+classification_model.load_state_dict(torch.load(path)) #QUESTION: define path, make it more specified!
+classification_model.to(device)
+classification_model.eval() #QUESTION: what is the use of this line?
+
+# Get state dictionaries
+classification_state_dict = classification_model.state_dict()
+segmentation_state_dict = model.state_dict()
+
+# Create a new state dictionary for the segmentation model
+new_state_dict = {} #QUESTION: why?
+
+# Map and transfer the convolutional weights
+for name, param in classification_state_dict.items():
+    # Skip the first convolutional layer due to input channel mismatch
+    if name == 'unet.model.0.conv.weight':
+        continue
+    # Skip biases, normalization layers, and fully connected layer
+    if 'bias' in name or 'adn' in name or 'fc' in name:
+        continue
+
+    # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
+    seg_name = name.replace('unet.', 'model.') #I believe the output of this is wrong! QUESTION!
+    seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+
+    # Check if the parameter exists in the segmentation model
+    if seg_name in segmentation_state_dict: #Only transfer parameters where the names match.
+        if param.shape == segmentation_state_dict[seg_name].shape: #Only transfer parameters where the shapes are identical.
+            new_state_dict[seg_name] = param
+            print(f"Transferring {name} --> {seg_name}")
+        else:
+            print(f"Shape mismatch: {name} ({param.shape}) vs {seg_name} ({segmentation_state_dict[seg_name].shape}), skipping.")
+    else:
+        print(f"{seg_name} not found in segmentation model, skipping.") #QUESTION: it should be here specified that I just want the second, third and fourth layer (in this scenario I will NOT include the bottleneck)
+
+# Update the segmentation model's state dictionary 
+segmentation_state_dict.update(new_state_dict)
+model.load_state_dict(segmentation_state_dict) #QUESTION: this is the actual transferring/initialising step?
+
+# Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
+for name, param in model.named_parameters(): #QUESTION: this is the right place for this block?
+    if name in new_state_dict:
+        param.requires_grad = False
+        print(f"Freezing layer: {name}")
+
+
+# Transfer Learning Code Ends Here
+
+##################################
+##################################
 print("Create Loss")
 
 #include_background=True: Includes the background class in the loss calculation. For binary segmentation tasks, this parameter ensures that the loss accounts for both foreground and background pixels.
