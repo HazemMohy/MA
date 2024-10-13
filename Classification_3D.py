@@ -82,7 +82,7 @@ warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 #The pin_memory parameter in DataLoader is used to speed up data transfer between the host (CPU) and the GPU. When pin_memory is set to True, it allows the data loader to use pinned (page-locked) memory, which can make data transfer
 #to the GPU faster. This is particularly useful when training models on a GPU.
 #pin_memory = torch.cuda.is_available()
-device = torch.device("cuda:0")
+#device = torch.device("cuda:0")
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -143,6 +143,7 @@ if __name__ == "__main__": #to avoid runnig the whole script, while I just need 
     ##################################
     #SLURM_JOB_ID
     slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
+    device = torch.device("cuda:0") #I put it here to just avoid expected problems
 
     #"Runs" directory
     runs_dir = "/lustre/groups/iterm/Hazem/MA/Runs"
