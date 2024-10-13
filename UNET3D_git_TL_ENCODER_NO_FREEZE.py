@@ -74,7 +74,7 @@ learning_rate = hyperparameters["learning_rate"]
 max_epochs = hyperparameters["max_epochs"]
 
 # Conditional batch size and val_interval based on max_epochs
-if max_epochs == 100: 
+if max_epochs in [10, 50, 100]:
     batch_size = 4 #immer 8
     val_interval = 5
 elif max_epochs in [1000, 4000, 8000]:
