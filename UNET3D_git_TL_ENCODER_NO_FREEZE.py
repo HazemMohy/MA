@@ -464,7 +464,7 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 
 excluded_params = [
     # Encoder Layers
-    # 1st layer parameters (ALWAYS EXCLUDED!)
+    # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition)
     #'unet.model.0.conv.weight',
     # 2nd layer parameters
     # 3rd layer parameters
@@ -481,28 +481,33 @@ excluded_params = [
     'unet.model.1.submodule.1.submodule.2.conv.weight',
     # 8th layer parameters
     'unet.model.1.submodule.2.conv.weight',
-    # 9th layer parameters (ALWAYS EXCLUDED!) (there is no adn layer here!!)
-    'unet.model.2.conv.weight',
+    # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition) (there is no adn layer here!!)
+    #'unet.model.2.conv.weight',
     
-    # Classification Layer
+    # Classification Layer (excluded via 'fc' in name)
 
 ]
 
 
 # Map and transfer the convolutional weights
 for name, param in classification_state_dict.items():
-    # Skip the first convolutional layer due to input channel mismatch
-    if name == 'unet.model.0.conv.weight':
+    # Skip EXPLICITLY excluded parameters
+    if name in excluded_params:
+        continue 
+    # Skip the first convolutional layer due to input channel mismatch, and the NINTH layer due to output channel mismatch
+    if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
         continue
     # Skip biases, normalization layers, and fully connected layer
     if 'bias' in name or 'adn' in name or 'fc' in name:
-    #     continue
-    if name in excluded_params:
-        continue  # Skip excluded parameters
+        continue
+     
 
     # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
     seg_name = name.replace('unet.model.', 'model.')
     seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+
+    #For debugging: Print original and mapped names
+    print(f"Original name: {name}, Mapped name: {seg_name}")
 
     # Check if the parameter exists in the segmentation model
     if seg_name in segmentation_state_dict: #Only transfer parameters where the names match.
