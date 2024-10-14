@@ -521,10 +521,6 @@ for name, param in classification_state_dict.items():
         # For encoder layers, use the existing mapping
         seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
     
-    
-    
-    
-    
     # seg_name = name.replace('unet.model.', 'model.')
     # seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
 
