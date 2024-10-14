@@ -10,7 +10,7 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nice=1
 #SBATCH --qos=gpu_normal
-#SBATCH -w gpusrv47
+#SBATCH -w supergpu02
 #SBATCH --exclude=supergpu15
 ##SBATCH --exclude=gpusrv[XX,YY],supergpuZZ
 
@@ -24,4 +24,4 @@ echo "env activated"
 export CUDA_LAUNCH_BLOCKING=1
 echo "CUDA_LAUNCH_BLOCKING set to 1"
 
-srun python -u UNET3D_git_TL_3D.py --job $SLURM_JOB_ID
+srun python -u UNET3D_git_TL_1E.py --job $SLURM_JOB_ID
