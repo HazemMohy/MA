@@ -24,4 +24,4 @@ echo "env activated"
 export CUDA_LAUNCH_BLOCKING=1
 echo "CUDA_LAUNCH_BLOCKING set to 1"
 
-srun python -u UNET3D_git_TL_3D.py --job $SLURM_JOB_ID
+srun python -u UNET3D_git_TL_1E.py --job $SLURM_JOB_ID
