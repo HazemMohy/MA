@@ -496,16 +496,32 @@ for name, param in classification_state_dict.items():
     if name in excluded_params:
         continue 
     # Skip the first convolutional layer due to input channel mismatch, and the NINTH layer due to output channel mismatch
-    if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
-        continue
+    # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
+    #     continue
     # Skip biases, normalization layers, and fully connected layer
-    if 'bias' in name or 'adn' in name or 'fc' in name:
+    #if 'bias' in name or 'adn' in name or 'fc' in name:
+    if 'adn' in name or 'fc' in name:
         continue
      
 
     # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
     seg_name = name.replace('unet.model.', 'model.')
-    seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+    
+    # Check if the parameter is in the decoder layers
+    if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+        # For decoder layers, insert '.0' before '.conv.unit0.conv'
+        seg_name = seg_name.replace('.conv.', '.0.conv.')
+        
+    else:
+        # For encoder layers, use the existing mapping
+        seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+    
+    
+    
+    
+    
+    # seg_name = name.replace('unet.model.', 'model.')
+    # seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
 
     #For debugging: Print original and mapped names
     print(f"Original name: {name}, Mapped name: {seg_name}")
