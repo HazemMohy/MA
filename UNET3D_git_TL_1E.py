@@ -482,12 +482,17 @@ excluded_params = [
     # Decoder Layers
     # 6th layer parameters
     'unet.model.1.submodule.1.submodule.1.submodule.2.conv.weight',
+    'unet.model.1.submodule.1.submodule.1.submodule.2.conv.bias',
+    'unet.model.1.submodule.1.submodule.1.submodule.2.adn.A.weight',
     # 7th layer parameters
     'unet.model.1.submodule.1.submodule.2.conv.weight',
+    'unet.model.1.submodule.1.submodule.2.conv.bias',
+    'unet.model.1.submodule.1.submodule.2.adn.A.weight',
     # 8th layer parameters
     'unet.model.1.submodule.2.conv.weight',
+    'unet.model.1.submodule.2.conv.bias',
+    'unet.model.1.submodule.2.adn.A.weight',
     # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!) (there is no adn layer here!!)
-    'unet.model.2.conv.weight',
     'unet.model.2.conv.weight',
     'unet.model.2.conv.bias',
     # Classification Layer (excluded via 'fc' in name)

@@ -465,26 +465,33 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 
 excluded_params = [
     # Encoder Layers
-    # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition)
-    #'unet.model.0.conv.weight',
+    # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!)
+    'unet.model.0.conv.weight',
+    'unet.model.0.conv.bias',
+    'unet.model.0.adn.A.weight',
     # 2nd layer parameters
     # 3rd layer parameters
     # 4th layer parameters
 
     # Bottleneck
     # 5th layer parameters
-    #'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight',
     
     # Decoder Layers
     # 6th layer parameters
     'unet.model.1.submodule.1.submodule.1.submodule.2.conv.weight',
+    'unet.model.1.submodule.1.submodule.1.submodule.2.conv.bias',
+    'unet.model.1.submodule.1.submodule.1.submodule.2.adn.A.weight',
     # 7th layer parameters
     'unet.model.1.submodule.1.submodule.2.conv.weight',
+    'unet.model.1.submodule.1.submodule.2.conv.bias',
+    'unet.model.1.submodule.1.submodule.2.adn.A.weight',
     # 8th layer parameters
     'unet.model.1.submodule.2.conv.weight',
-    # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition) (there is no adn layer here!!)
-    #'unet.model.2.conv.weight',
-    
+    'unet.model.1.submodule.2.conv.bias',
+    'unet.model.1.submodule.2.adn.A.weight',
+    # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!) (there is no adn layer here!!)
+    'unet.model.2.conv.weight',
+    'unet.model.2.conv.bias',
     # Classification Layer (excluded via 'fc' in name)
 
 ]
