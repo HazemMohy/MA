@@ -166,9 +166,9 @@ data_dirs = {
 data_dir = data_dirs[dataset_choice]
 ##################################
 #train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:2] #here I just used 2 patches of my data as a test so I shall not wait that long!
-train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))[:10]
-train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))[:10]
-train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))[:10]
+train_bg = sorted(glob.glob(os.path.join(data_dir, 'bg', "*.nii.gz")))
+train_raw = sorted(glob.glob(os.path.join(data_dir, 'raw', "*.nii.gz")))
+train_gt = sorted(glob.glob(os.path.join(data_dir, 'gt', "*.nii.gz")))
 ##################################
 
 print(os.path.join(data_dir, 'bg', "*.nii.gz"))
@@ -512,7 +512,7 @@ for name, param in classification_state_dict.items():
     #     continue
     # Skip biases, normalization layers, and fully connected layer
     #if 'bias' in name or 'adn' in name or 'fc' in name:
-    if 'fc' in name:
+    if 'adn' in name or 'fc' in name:
         continue
      
 
