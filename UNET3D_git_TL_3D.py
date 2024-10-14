@@ -486,7 +486,8 @@ excluded_params = [
     # Classification Layer (excluded via 'fc' in name)
 
 ]
-
+# Initialize a counter for the number of transferred parameters
+transfer_count = 0
 
 # Map and transfer the convolutional weights
 for name, param in classification_state_dict.items():
@@ -525,10 +526,14 @@ for name, param in classification_state_dict.items():
         if param.shape == segmentation_state_dict[seg_name].shape: #Only transfer parameters where the shapes are identical.
             new_state_dict[seg_name] = param
             print(f"Transferring {name} --> {seg_name}")
+            transfer_count += 1  # Increment the counter
         else:
             print(f"Shape mismatch: {name} ({param.shape}) vs {seg_name} ({segmentation_state_dict[seg_name].shape}), skipping.")
     else:
         print(f"{seg_name} not found in segmentation model, skipping.") 
+
+# After the loop, print the total number of transferred parameters
+print(f"Total number of parameters transferred: {transfer_count}")
 
 # Update the segmentation model's state dictionary 
 segmentation_state_dict.update(new_state_dict) #Updates the segmentation model's state dictionary with the transferred parameters.
