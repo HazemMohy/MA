@@ -486,6 +486,7 @@ excluded_params = [
     # Classification Layer (excluded via 'fc' in name)
 
 ]
+
 # Initialize a counter for the number of transferred parameters
 transfer_count = 0
 
@@ -505,18 +506,35 @@ for name, param in classification_state_dict.items():
 
     # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
     seg_name = name.replace('unet.model.', 'model.')
-    
-    # Check if the parameter is in the decoder layers
-    if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
-        # For decoder layers, insert '.0' before '.conv.unit0.conv'
-        seg_name = seg_name.replace('.conv.', '.0.conv.')
-        
+
+    if 'adn' in seg_name:
+        # Handle 'adn' parameters separately
+        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+            # Decoder layers
+            seg_name = seg_name.replace('.adn.', '.0.adn.')
+        else:
+            # Encoder and bottleneck layers
+            seg_name = seg_name.replace('.adn.', '.conv.unit0.adn.')
     else:
-        # For encoder layers, use the existing mapping
-        seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+        # Handle convolutional weights and biases
+        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+            # Decoder layers
+            seg_name = seg_name.replace('.conv.', '.0.conv.')
+        else:
+            # Encoder and bottleneck layers
+            seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
     
-    # seg_name = name.replace('unet.model.', 'model.')
-    # seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+    # # Check if the parameter is in the decoder layers
+    # if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+    #     # For decoder layers, insert '.0' before '.conv.unit0.conv'
+    #     seg_name = seg_name.replace('.conv.', '.0.conv.')
+        
+    # else:
+    #     # For encoder layers, use the existing mapping
+    #     seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+    
+    # # seg_name = name.replace('unet.model.', 'model.')
+    # # seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
 
     #For debugging: Print original and mapped names
     print(f"Original name: {name}, Mapped name: {seg_name}")
@@ -531,6 +549,7 @@ for name, param in classification_state_dict.items():
             print(f"Shape mismatch: {name} ({param.shape}) vs {seg_name} ({segmentation_state_dict[seg_name].shape}), skipping.")
     else:
         print(f"{seg_name} not found in segmentation model, skipping.") 
+
 
 # After the loop, print the total number of transferred parameters
 print(f"Total number of parameters transferred: {transfer_count}")
