@@ -10,8 +10,9 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nice=1
 #SBATCH --qos=gpu_long
-#SBATCH -w supergpu07
-
+#SBATCH -w gpusrv72
+#SBATCH --exclude=supergpu15
+##SBATCH --exclude=gpusrv[XX,YY],supergpuZZ
 
 source /lustre/groups/iterm/Hazem/miniconda3/bin/activate Masterarbeit
 eval "$(conda shell.bash hook)"
