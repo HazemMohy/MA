@@ -465,8 +465,10 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 
 excluded_params = [
     # Encoder Layers
-    # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition)
-    #'unet.model.0.conv.weight',
+    # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!)
+    'unet.model.0.conv.weight',
+    'unet.model.0.conv.bias',
+    'unet.model.0.adn.A.weight',
     # 2nd layer parameters
     # 3rd layer parameters
     # 4th layer parameters
@@ -474,6 +476,8 @@ excluded_params = [
     # Bottleneck
     # 5th layer parameters
     'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight',
+    'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.bias',
+    'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.adn.A.weight',
     
     # Decoder Layers
     # 6th layer parameters
@@ -482,9 +486,10 @@ excluded_params = [
     'unet.model.1.submodule.1.submodule.2.conv.weight',
     # 8th layer parameters
     'unet.model.1.submodule.2.conv.weight',
-    # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition) (there is no adn layer here!!)
-    #'unet.model.2.conv.weight',
-    
+    # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!) (there is no adn layer here!!)
+    'unet.model.2.conv.weight',
+    'unet.model.2.conv.weight',
+    'unet.model.2.conv.bias',
     # Classification Layer (excluded via 'fc' in name)
 
 ]
@@ -496,8 +501,8 @@ for name, param in classification_state_dict.items():
     if name in excluded_params:
         continue 
     # Skip the first convolutional layer due to input channel mismatch, and the NINTH layer due to output channel mismatch
-    if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
-        continue
+    # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
+    #     continue
     # Skip biases, normalization layers, and fully connected layer
     #if 'bias' in name or 'adn' in name or 'fc' in name:
     if 'adn' in name or 'fc' in name:
@@ -506,7 +511,22 @@ for name, param in classification_state_dict.items():
 
     # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
     seg_name = name.replace('unet.model.', 'model.')
-    seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+    
+    # Check if the parameter is in the decoder layers
+    if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+        # For decoder layers, insert '.0' before '.conv.unit0.conv'
+        seg_name = seg_name.replace('.conv.', '.0.conv.')
+        
+    else:
+        # For encoder layers, use the existing mapping
+        seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
+    
+    
+    
+    
+    
+    # seg_name = name.replace('unet.model.', 'model.')
+    # seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
 
     #For debugging: Print original and mapped names
     print(f"Original name: {name}, Mapped name: {seg_name}")
