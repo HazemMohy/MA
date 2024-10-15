@@ -511,8 +511,8 @@ for name, param in classification_state_dict.items():
     # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
     #     continue
     # Skip biases, normalization layers, and fully connected layer
-    #if 'bias' in name or 'adn' in name or 'fc' in name:
-    if 'fc' in name:
+    if 'bias' in name or 'adn' in name or 'fc' in name:
+    #if 'fc' in name:
         continue
      
 
@@ -576,11 +576,11 @@ model.load_state_dict(segmentation_state_dict, strict=False) #This line loads th
 #strict=False: Allows the loading process to ignore missing or unexpected keys. && This is suitable when you're only loading a subset of the model's parameters (e.g., when
 #doing transfer learning and not transferring all weights).
 
-# Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
-# for name, param in model.named_parameters(): #Ensure that the parameter names in model.named_parameters() match those in new_state_dict.
-#     if name in new_state_dict:
-#         param.requires_grad = False #you prevent the optimizer from updating these parameters during training.
-#         print(f"Freezing layer: {name}")
+#Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
+for name, param in model.named_parameters(): #Ensure that the parameter names in model.named_parameters() match those in new_state_dict.
+    if name in new_state_dict:
+        param.requires_grad = False #you prevent the optimizer from updating these parameters during training.
+        print(f"Freezing layer: {name}")
 
 # print out the names and shapes of the transferred parameters to verify the transfer and ensure correctness:
 print("Transferred Parameters:")
@@ -682,323 +682,323 @@ scaler = torch.cuda.amp.GradScaler() #Scaled gradient
 ##################################
 print("Execute a typical PyTorch training process")
 print("Dry Tesl ALL DONE")
-max_epochs = max_epochs #only 10 as a test
-val_interval = val_interval #from 2 to 1
-best_metric = -1
-best_metric_epoch = -1
-epoch_loss_values = []
-metric_values = []
-post_pred = AsDiscrete(argmax=True, to_onehot=2, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #to_onehot=n_classes
-post_label = AsDiscrete(to_onehot=2, n_classes=2) 
-#both post_pred and post_label are eliminated = NOT used!!
-##################################
-#Clear CUDA cache to free up memory before starting the training loop
-#This ensures that any residual memory from previous operations is freed up.
-#This setup should help in mitigating the out-of-memory error.
-import torch
-torch.cuda.empty_cache()
+# max_epochs = max_epochs #only 10 as a test
+# val_interval = val_interval #from 2 to 1
+# best_metric = -1
+# best_metric_epoch = -1
+# epoch_loss_values = []
+# metric_values = []
+# post_pred = AsDiscrete(argmax=True, to_onehot=2, n_classes=2) # argmax turns values into discretes #2 classes: background and foreground #to_onehot=n_classes
+# post_label = AsDiscrete(to_onehot=2, n_classes=2) 
+# #both post_pred and post_label are eliminated = NOT used!!
+# ##################################
+# #Clear CUDA cache to free up memory before starting the training loop
+# #This ensures that any residual memory from previous operations is freed up.
+# #This setup should help in mitigating the out-of-memory error.
+# import torch
+# torch.cuda.empty_cache()
 
 
-for epoch in range(max_epochs):
-    print("-" * 40)
-    print(f"epoch {epoch + 1}/{max_epochs}")
-    model.train() # Tells the model that it's being trained and not used for inference, model.eval()
-    epoch_loss = 0
-    step = 0
+# for epoch in range(max_epochs):
+#     print("-" * 40)
+#     print(f"epoch {epoch + 1}/{max_epochs}")
+#     model.train() # Tells the model that it's being trained and not used for inference, model.eval()
+#     epoch_loss = 0
+#     step = 0
 
-    for batch_data in train_loader: #how big is the batch? #For each batch, computes the loss, backpropagates gradients, and updates the model weights.
-        step += 1
-        inputs, labels = (
-            batch_data["image"].to(device),
-            batch_data["label"].to(device),
-        )
-        print(f"Input shape before model: {inputs.shape}")  #to check input size
-        optimizer.zero_grad() #Before you compute gradients for a new batch, you need to zero out the gradients from the previous batch. If you don't zero them out, gradients from different batches will accumulate, NOT desired!!
+#     for batch_data in train_loader: #how big is the batch? #For each batch, computes the loss, backpropagates gradients, and updates the model weights.
+#         step += 1
+#         inputs, labels = (
+#             batch_data["image"].to(device),
+#             batch_data["label"].to(device),
+#         )
+#         print(f"Input shape before model: {inputs.shape}")  #to check input size
+#         optimizer.zero_grad() #Before you compute gradients for a new batch, you need to zero out the gradients from the previous batch. If you don't zero them out, gradients from different batches will accumulate, NOT desired!!
 
 
-        #Mixed Precision Training: Utilizes GPU capabilities for faster and memory-efficient training.
-        with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
-            outputs = model(inputs)
-            #loss = loss_function(outputs, labels) #for DiecLoss
-            loss = loss_function(outputs, labels.float()) # BCEWithLogitsLoss expects both outputs (already is float) and labels to be of floating-point type. --> labels.float()
-        scaler.scale(loss).backward() #check scaler?!
-        scaler.step(optimizer)
-        scaler.update()
+#         #Mixed Precision Training: Utilizes GPU capabilities for faster and memory-efficient training.
+#         with torch.cuda.amp.autocast(): # (automated mixed precision) #allowing performance in a lower precision --> requires less memory, thus: speeding up the training process!
+#             outputs = model(inputs)
+#             #loss = loss_function(outputs, labels) #for DiecLoss
+#             loss = loss_function(outputs, labels.float()) # BCEWithLogitsLoss expects both outputs (already is float) and labels to be of floating-point type. --> labels.float()
+#         scaler.scale(loss).backward() #check scaler?!
+#         scaler.step(optimizer)
+#         scaler.update()
         
-        epoch_loss += loss.item() #accumulates the total loss over the epoch
-        print(
-            f"{step}/{len(train_ds) // train_loader.batch_size}, "
-            f"train_loss: {loss.item():.4f}")
+#         epoch_loss += loss.item() #accumulates the total loss over the epoch
+#         print(
+#             f"{step}/{len(train_ds) // train_loader.batch_size}, "
+#             f"train_loss: {loss.item():.4f}")
 
-    epoch_loss /= step
-    epoch_loss_values.append(epoch_loss) #Logs the average loss for each epoch.
-    print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+#     epoch_loss /= step
+#     epoch_loss_values.append(epoch_loss) #Logs the average loss for each epoch.
+#     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
-    # Update the learning rate using the scheduler if available
-    #The reason for this if-check is that ReduceLROnPlateau scheduler steps based on validation metrics rather than epoch count, so we don't want to call scheduler.step() for ReduceLROnPlateau in the training loop.
-    #Only for logging the learning rates of schedulers that step per epoch --> CosineAnnealingLR steps based on epoch, so it should be called at the end of each epoch in the training loop.
-    if scheduler and isinstance(scheduler, (torch.optim.lr_scheduler.CosineAnnealingLR, torch.optim.lr_scheduler.CosineAnnealingWarmRestarts)): #you can use OR as well, but you will then need a nested if which I don't want
-        scheduler.step()
-        #scheduler.get_last_lr(): Returns a list of the last computed learning rates by the scheduler. This is a list because PyTorch optimizers can have multiple parameter groups, each with its own learning rate.
-        #[0]: Assumes that there is only one parameter group in the optimizer. If you have multiple parameter groups, you would need to handle each one appropriately.
-        current_lr = scheduler.get_last_lr()[0]  # Assuming only one param group 
-        print(f"Current Learning Rate after epoch {epoch + 1}: {current_lr}")
-        unique_learning_rates.add(current_lr)
+#     # Update the learning rate using the scheduler if available
+#     #The reason for this if-check is that ReduceLROnPlateau scheduler steps based on validation metrics rather than epoch count, so we don't want to call scheduler.step() for ReduceLROnPlateau in the training loop.
+#     #Only for logging the learning rates of schedulers that step per epoch --> CosineAnnealingLR steps based on epoch, so it should be called at the end of each epoch in the training loop.
+#     if scheduler and isinstance(scheduler, (torch.optim.lr_scheduler.CosineAnnealingLR, torch.optim.lr_scheduler.CosineAnnealingWarmRestarts)): #you can use OR as well, but you will then need a nested if which I don't want
+#         scheduler.step()
+#         #scheduler.get_last_lr(): Returns a list of the last computed learning rates by the scheduler. This is a list because PyTorch optimizers can have multiple parameter groups, each with its own learning rate.
+#         #[0]: Assumes that there is only one parameter group in the optimizer. If you have multiple parameter groups, you would need to handle each one appropriately.
+#         current_lr = scheduler.get_last_lr()[0]  # Assuming only one param group 
+#         print(f"Current Learning Rate after epoch {epoch + 1}: {current_lr}")
+#         unique_learning_rates.add(current_lr)
 
-    if (epoch + 1) % val_interval == 0:
-        model.eval()
-        with torch.no_grad(): #disabling gradient calculation
-            metric_sum = 0.0
-            metric_count = 0
-            for val_data in val_loader:
-                val_inputs, val_labels = (
-                    val_data["image"].to(device),
-                    val_data["label"].to(device),
-                )
-                roi_size = (300,300,300) #adapt it to the dimensions of my data
-                sw_batch_size = 4 #number of slices or batches processed simultaneously in the sliding window inference.
+#     if (epoch + 1) % val_interval == 0:
+#         model.eval()
+#         with torch.no_grad(): #disabling gradient calculation
+#             metric_sum = 0.0
+#             metric_count = 0
+#             for val_data in val_loader:
+#                 val_inputs, val_labels = (
+#                     val_data["image"].to(device),
+#                     val_data["label"].to(device),
+#                 )
+#                 roi_size = (300,300,300) #adapt it to the dimensions of my data
+#                 sw_batch_size = 4 #number of slices or batches processed simultaneously in the sliding window inference.
                 
-                with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
-                    val_outputs = model(val_inputs)
+#                 with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
+#                     val_outputs = model(val_inputs)
 
-                    # Apply sigmoid activation and threshold to obtain binary outputs
-                    val_outputs = torch.sigmoid(val_outputs)  # Sigmoid to convert logits to probabilities
-                    val_outputs = (val_outputs > 0.5).float()  # Thresholding probabilities to binary values
-                    #I think I need here to visualize my outputs as a CHECK, before and after!
-                    val_labels[val_labels > 0] = 1
+#                     # Apply sigmoid activation and threshold to obtain binary outputs
+#                     val_outputs = torch.sigmoid(val_outputs)  # Sigmoid to convert logits to probabilities
+#                     val_outputs = (val_outputs > 0.5).float()  # Thresholding probabilities to binary values
+#                     #I think I need here to visualize my outputs as a CHECK, before and after!
+#                     val_labels[val_labels > 0] = 1
 
     
-                #to ensure data shapes and types match the expected:
-                print("Validation outputs shape:", val_outputs.shape)
-                print("Validation labels shape:", val_labels.shape)
-                print("Validation outputs unique values:", torch.unique(val_outputs))
-                print("Validation labels unique values:", torch.unique(val_labels))
+#                 #to ensure data shapes and types match the expected:
+#                 print("Validation outputs shape:", val_outputs.shape)
+#                 print("Validation labels shape:", val_labels.shape)
+#                 print("Validation outputs unique values:", torch.unique(val_outputs))
+#                 print("Validation labels unique values:", torch.unique(val_labels))
 
 
-                #Computes Dice metrics on validation data.
-                dice_metric(y_pred=val_outputs, y=val_labels)
-                #"dice_metric" is used to evaluate the model's performance on the validation set. It calculates the Dice coefficient between the predicted segmentation masks (val_outputs) and the ground truth masks/labels (val_labels).
+#                 #Computes Dice metrics on validation data.
+#                 dice_metric(y_pred=val_outputs, y=val_labels)
+#                 #"dice_metric" is used to evaluate the model's performance on the validation set. It calculates the Dice coefficient between the predicted segmentation masks (val_outputs) and the ground truth masks/labels (val_labels).
                 
                 
             
-            #This line computes the average Dice score across all batches processed so far.
-            #This call computes the mean Dice score over all batches, providing a single performance metric for the epoch.
-            metric = dice_metric.aggregate().item() #this line is giving us the average DiceScore for the epoch without having to manually add the individual scores then dividing them by the length/Abzahl of the whole
-            #Resets the metric computation to start fresh for the next epoch.
-            dice_metric.reset()
-            metric_values.append(metric)
+#             #This line computes the average Dice score across all batches processed so far.
+#             #This call computes the mean Dice score over all batches, providing a single performance metric for the epoch.
+#             metric = dice_metric.aggregate().item() #this line is giving us the average DiceScore for the epoch without having to manually add the individual scores then dividing them by the length/Abzahl of the whole
+#             #Resets the metric computation to start fresh for the next epoch.
+#             dice_metric.reset()
+#             metric_values.append(metric)
             
-            #Logs and saves the best model based on validation performance
-            if metric > best_metric:
-                best_metric = metric
-                best_metric_epoch = epoch + 1
-                best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
-                torch.save(model.state_dict(), best_model_path)
-                print("Saved new best metric model at:", best_model_path)
-            print(
-                f"current epoch: {epoch + 1} current mean dice: {metric:.10f}"
-                f"\nbest mean dice: {best_metric:.10f} "
-                f"at epoch: {best_metric_epoch}"
-            )
+#             #Logs and saves the best model based on validation performance
+#             if metric > best_metric:
+#                 best_metric = metric
+#                 best_metric_epoch = epoch + 1
+#                 best_model_path = os.path.join(my_models_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+#                 torch.save(model.state_dict(), best_model_path)
+#                 print("Saved new best metric model at:", best_model_path)
+#             print(
+#                 f"current epoch: {epoch + 1} current mean dice: {metric:.10f}"
+#                 f"\nbest mean dice: {best_metric:.10f} "
+#                 f"at epoch: {best_metric_epoch}"
+#             )
 
-        #In the validation loop, after computing the validation metric, update the scheduler based on validation metric!
-        #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
-        #if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-        if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-            scheduler.step(metric)
-            current_lr = scheduler.optimizer.param_groups[0]['lr']
-            print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
-            unique_learning_rates.add(current_lr)
+#         #In the validation loop, after computing the validation metric, update the scheduler based on validation metric!
+#         #The ReduceLROnPlateau scheduler should be applied in the validation loop because it adjusts the learning rate based on the validation performance, not on the epoch count.
+#         #if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+#         if scheduler and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+#             scheduler.step(metric)
+#             current_lr = scheduler.optimizer.param_groups[0]['lr']
+#             print(f"Current Learning Rate after validation at epoch {epoch + 1}: {current_lr}")
+#             unique_learning_rates.add(current_lr)
 
-    #plots the training loss and validation Dice metrics over epochs.
-    print("Creating the Plots!")
-    if (epoch + 1) % 1 == 0: # from %3 to %1, to see more!
-        print("Plot the loss and metric")
+#     #plots the training loss and validation Dice metrics over epochs.
+#     print("Creating the Plots!")
+#     if (epoch + 1) % 1 == 0: # from %3 to %1, to see more!
+#         print("Plot the loss and metric")
         
-        plt.figure("train", (12, 6))
-        plt.subplot(1, 2, 1)
-        plt.title("Epoch Average Loss")
-        x = [i + 1 for i in range(len(epoch_loss_values))]
-        y = epoch_loss_values
-        plt.xlabel("epoch")
-        plt.plot(x, y)
+#         plt.figure("train", (12, 6))
+#         plt.subplot(1, 2, 1)
+#         plt.title("Epoch Average Loss")
+#         x = [i + 1 for i in range(len(epoch_loss_values))]
+#         y = epoch_loss_values
+#         plt.xlabel("epoch")
+#         plt.plot(x, y)
         
-        plt.subplot(1, 2, 2)
-        plt.title("Val Mean Dice")
-        x = [val_interval * (i + 1) for i in range(len(metric_values))]
-        y = metric_values
-        plt.xlabel("epoch")
-        plt.plot(x, y)
+#         plt.subplot(1, 2, 2)
+#         plt.title("Val Mean Dice")
+#         x = [val_interval * (i + 1) for i in range(len(metric_values))]
+#         y = metric_values
+#         plt.xlabel("epoch")
+#         plt.plot(x, y)
 
-        #saves the plots to specified directories.
-        fname = os.path.join(my_plots_dir, f"metrics_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
-        plt.savefig(fname, dpi=300, facecolor='w', edgecolor='w',
-                format='png', transparent=False, pad_inches=0.1)
-        plt.show()
-        print(f"Plot saved to {fname}")
+#         #saves the plots to specified directories.
+#         fname = os.path.join(my_plots_dir, f"metrics_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
+#         plt.savefig(fname, dpi=300, facecolor='w', edgecolor='w',
+#                 format='png', transparent=False, pad_inches=0.1)
+#         plt.show()
+#         print(f"Plot saved to {fname}")
         
-        #saves the latest model state to specified directories.
-        latest_model_path = os.path.join(my_models_dir, f"latest_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
-        torch.save(model.state_dict(), latest_model_path)
-        print(f"Saved the latest model state to {latest_model_path}")
+#         #saves the latest model state to specified directories.
+#         latest_model_path = os.path.join(my_models_dir, f"latest_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+#         torch.save(model.state_dict(), latest_model_path)
+#         print(f"Saved the latest model state to {latest_model_path}")
 
-# Print the unique learning rates used
-print("-" * 40)
-print("-" * 40)
-if scheduler:
-    print("Unique Learning Rates used during training:", sorted(unique_learning_rates))
-else:
-    print("No learning rate scheduling applied, constant learning rate used.")
-
-
-#prints a summary message with the best metric achieved and the corresponding epoch.
-print("-" * 40)
-print(
-    f"train completed, best_metric: {best_metric:.4f} "
-    f"at epoch: {best_metric_epoch}") 
-##################################
-# Evaluate on the test dataset
-print("-" * 40)
-print("FINAL STEP: Evaluate on test dataset")
-model.eval()
-with torch.no_grad(): #disabling gradient calculation
-    test_metric = DiceMetric(include_background=True, reduction="mean") #defining the test_metric-CLASS (NOT an object)
-    #for test_data in test_loader:
-    for i, test_data in enumerate(test_loader): #to keep track of which file is being processed
-        test_inputs, test_labels = (
-            test_data["image"].to(device),
-            test_data["label"].to(device),
-        )
-
-        with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
-            test_outputs = model(test_inputs)
-            #Apply sigmoid activation and threshold to obtain binary outputs
-            test_outputs = torch.sigmoid(test_outputs) # Sigmoid to convert logits to probabilities
-            test_outputs = (test_outputs > 0.5).float() # Thresholding probabilities to binary values
-            test_labels[test_labels > 0] = 1
-
-        # Iterate over the batch and save each output individually
-        for j in range(test_outputs.shape[0]): #iterates over each item in the batch (test_outputs.shape[0])
-            # Extract original file path to generate the new file name
-            original_file_path = test_files[i * test_outputs.shape[0] + j]["raw"]
-            original_file_name = os.path.basename(original_file_path)
-            new_file_name = original_file_name.replace("raw", "test").replace("bg", "test").replace("gt", "test")
-
-            # Convert tensors to numpy arrays
-            output_array = test_outputs.cpu().numpy()[j, 0] #The output_array is generated for each item in the batch, and then saved individually.
-
-            # Check and resize if necessary
-            raw_image_path = test_files[i * test_outputs.shape[0] + j]["raw"]
-            raw_image = nib.load(raw_image_path).get_fdata()
-            if output_array.shape != raw_image.shape:
-                zoom_factors = np.array(raw_image.shape) / np.array(output_array.shape)
-                output_array = zoom(output_array, zoom_factors, order=1) # order=1 for bilinear interpolation
+# # Print the unique learning rates used
+# print("-" * 40)
+# print("-" * 40)
+# if scheduler:
+#     print("Unique Learning Rates used during training:", sorted(unique_learning_rates))
+# else:
+#     print("No learning rate scheduling applied, constant learning rate used.")
 
 
-            # Save output as NIfTI file
-            output_nifti_path = os.path.join(output_nifti_dir, new_file_name)
-            output_nifti = nib.Nifti1Image(output_array, np.eye(4))
-            nib.save(output_nifti, output_nifti_path)
+# #prints a summary message with the best metric achieved and the corresponding epoch.
+# print("-" * 40)
+# print(
+#     f"train completed, best_metric: {best_metric:.4f} "
+#     f"at epoch: {best_metric_epoch}") 
+# ##################################
+# # Evaluate on the test dataset
+# print("-" * 40)
+# print("FINAL STEP: Evaluate on test dataset")
+# model.eval()
+# with torch.no_grad(): #disabling gradient calculation
+#     test_metric = DiceMetric(include_background=True, reduction="mean") #defining the test_metric-CLASS (NOT an object)
+#     #for test_data in test_loader:
+#     for i, test_data in enumerate(test_loader): #to keep track of which file is being processed
+#         test_inputs, test_labels = (
+#             test_data["image"].to(device),
+#             test_data["label"].to(device),
+#         )
+
+#         with torch.cuda.amp.autocast(): #check #sliding_window_inference VS conventional_inference: val_outputs = model(val_inputs)
+#             test_outputs = model(test_inputs)
+#             #Apply sigmoid activation and threshold to obtain binary outputs
+#             test_outputs = torch.sigmoid(test_outputs) # Sigmoid to convert logits to probabilities
+#             test_outputs = (test_outputs > 0.5).float() # Thresholding probabilities to binary values
+#             test_labels[test_labels > 0] = 1
+
+#         # Iterate over the batch and save each output individually
+#         for j in range(test_outputs.shape[0]): #iterates over each item in the batch (test_outputs.shape[0])
+#             # Extract original file path to generate the new file name
+#             original_file_path = test_files[i * test_outputs.shape[0] + j]["raw"]
+#             original_file_name = os.path.basename(original_file_path)
+#             new_file_name = original_file_name.replace("raw", "test").replace("bg", "test").replace("gt", "test")
+
+#             # Convert tensors to numpy arrays
+#             output_array = test_outputs.cpu().numpy()[j, 0] #The output_array is generated for each item in the batch, and then saved individually.
+
+#             # Check and resize if necessary
+#             raw_image_path = test_files[i * test_outputs.shape[0] + j]["raw"]
+#             raw_image = nib.load(raw_image_path).get_fdata()
+#             if output_array.shape != raw_image.shape:
+#                 zoom_factors = np.array(raw_image.shape) / np.array(output_array.shape)
+#                 output_array = zoom(output_array, zoom_factors, order=1) # order=1 for bilinear interpolation
+
+
+#             # Save output as NIfTI file
+#             output_nifti_path = os.path.join(output_nifti_dir, new_file_name)
+#             output_nifti = nib.Nifti1Image(output_array, np.eye(4))
+#             nib.save(output_nifti, output_nifti_path)
         
         
-            #to ensure data shapes and types match the expected:
-            print(f"Test output {j} shape:", test_outputs[j].shape)
-            print(f"Test label {j} shape:", test_labels[j].shape)
-            print(f"Test output {j} unique values:", torch.unique(test_outputs[j]))
-            print(f"Test label {j} unique values:", torch.unique(test_labels[j]))
+#             #to ensure data shapes and types match the expected:
+#             print(f"Test output {j} shape:", test_outputs[j].shape)
+#             print(f"Test label {j} shape:", test_labels[j].shape)
+#             print(f"Test output {j} unique values:", torch.unique(test_outputs[j]))
+#             print(f"Test label {j} unique values:", torch.unique(test_labels[j]))
 
-            #Computes Dice metrics on testing data.
-            test_metric(y_pred=test_outputs, y=test_labels)
+#             #Computes Dice metrics on testing data.
+#             test_metric(y_pred=test_outputs, y=test_labels)
 
-    test_metric_value = test_metric.aggregate().item() #This line computes the average Dice score across all batches processed so far.
-    test_metric.reset() ##Resets the metric computation to start fresh for the next epoch.
-    print(f"Test Mean Dice: {test_metric_value:.10f}")
-
-
-print(f"NIfTI files saved to {output_nifti_dir}")
-print("-" * 40)
-##################################
-# Prepare data for CSV using Pandas
-epochs = list(range(1, max_epochs + 1))
-training_losses = epoch_loss_values
-validation_metrics = [None] * max_epochs
-
-for i, metric in enumerate(metric_values):
-    validation_epoch = (i + 1) * val_interval
-    validation_metrics[validation_epoch - 1] = metric
-
-# Create a DataFrame
-df = pd.DataFrame({
-    "Epoch": epochs,
-    "Average Training Loss": training_losses,
-    "Average Validation Dice Metric": validation_metrics
-})
-
-# Add rows for best metric and test metric
-# Create DataFrames for the additional metrics
-best_metric_df = pd.DataFrame({
-    "Epoch": ["Best Evaluation Metric"],
-    "Average Training Loss": [best_metric],
-    "Average Validation Dice Metric": [None]
-})
-
-test_metric_df = pd.DataFrame({
-    "Epoch": ["Test Dice Metric"],
-    "Average Training Loss": [test_metric_value],
-    "Average Validation Dice Metric": [None]
-})
-
-# Concatenate the DataFrames
-df = pd.concat([df, best_metric_df, test_metric_df], ignore_index=True)
-
-# Create a self-explanatory CSV file name
-csv_file_name = f"tracking_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}_{test_metric_value:.4f}.csv"
-csv_file_path = os.path.join(tracking_dir, csv_file_name)
+#     test_metric_value = test_metric.aggregate().item() #This line computes the average Dice score across all batches processed so far.
+#     test_metric.reset() ##Resets the metric computation to start fresh for the next epoch.
+#     print(f"Test Mean Dice: {test_metric_value:.10f}")
 
 
+# print(f"NIfTI files saved to {output_nifti_dir}")
+# print("-" * 40)
+# ##################################
+# # Prepare data for CSV using Pandas
+# epochs = list(range(1, max_epochs + 1))
+# training_losses = epoch_loss_values
+# validation_metrics = [None] * max_epochs
 
-# Save the DataFrame to a CSV file
-df.to_csv(csv_file_path, index=False)
+# for i, metric in enumerate(metric_values):
+#     validation_epoch = (i + 1) * val_interval
+#     validation_metrics[validation_epoch - 1] = metric
 
-print(f"Metrics CSV saved to {csv_file_path}")
-##################################
-## the Runs folder - all in one
-# Save csv file at Runs
-run_csv_file_path = os.path.join(run_dir, csv_file_name)
-df.to_csv(run_csv_file_path, index=False)
-print(f"Metrics CSV saved to {csv_file_path} and {run_csv_file_path}")
+# # Create a DataFrame
+# df = pd.DataFrame({
+#     "Epoch": epochs,
+#     "Average Training Loss": training_losses,
+#     "Average Validation Dice Metric": validation_metrics
+# })
 
-# Save the best model at Runs
-run_best_model_path = os.path.join(run_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
-shutil.copy(best_model_path, run_best_model_path)
-print(f"Saved best model at: {best_model_path} and {run_best_model_path}")
+# # Add rows for best metric and test metric
+# # Create DataFrames for the additional metrics
+# best_metric_df = pd.DataFrame({
+#     "Epoch": ["Best Evaluation Metric"],
+#     "Average Training Loss": [best_metric],
+#     "Average Validation Dice Metric": [None]
+# })
 
-# Save the latest model state at Runs
-run_latest_model_path = os.path.join(run_dir, f"latest_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
-shutil.copy(latest_model_path, run_latest_model_path)
-print(f"Saved latest model state to {latest_model_path} and {run_latest_model_path}")
+# test_metric_df = pd.DataFrame({
+#     "Epoch": ["Test Dice Metric"],
+#     "Average Training Loss": [test_metric_value],
+#     "Average Validation Dice Metric": [None]
+# })
 
-# Save the plot at Runs
-run_plot_file_path = os.path.join(run_dir, f"metrics_unet_plot_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
-shutil.copy(fname, run_plot_file_path)
-print(f"Plot saved to {fname} and {run_plot_file_path}")      
+# # Concatenate the DataFrames
+# df = pd.concat([df, best_metric_df, test_metric_df], ignore_index=True)
 
-# Save the test dataset at Runs
-run_test_dataset_path = os.path.join(run_dir, f"test_dataset_{slurm_job_id}_{dataset_choice}.json")
-shutil.copy(test_dataset_path, run_test_dataset_path)
-print(f"Testing dataset saved to {test_dataset_path} and {run_test_dataset_path}")
+# # Create a self-explanatory CSV file name
+# csv_file_name = f"tracking_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}_{test_metric_value:.4f}.csv"
+# csv_file_path = os.path.join(tracking_dir, csv_file_name)
 
-# Save output and error at Runs
-slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output.txt"
-slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error.txt"
-run_slurm_output_file = os.path.join(run_dir, f"3D_Seg_{slurm_job_id}_0_output.txt")
-run_slurm_error_file = os.path.join(run_dir, f"3D_Seg_{slurm_job_id}_0_error.txt")
 
-shutil.copy(slurm_output_file, run_slurm_output_file)
-shutil.copy(slurm_error_file, run_slurm_error_file)
-print(f"Slurm output file copied to {run_slurm_output_file}")
-print(f"Slurm error file copied to {run_slurm_error_file}")
-##################################
-#final print
-print("-" * 40)
-print("ALL DONE!") 
+
+# # Save the DataFrame to a CSV file
+# df.to_csv(csv_file_path, index=False)
+
+# print(f"Metrics CSV saved to {csv_file_path}")
+# ##################################
+# ## the Runs folder - all in one
+# # Save csv file at Runs
+# run_csv_file_path = os.path.join(run_dir, csv_file_name)
+# df.to_csv(run_csv_file_path, index=False)
+# print(f"Metrics CSV saved to {csv_file_path} and {run_csv_file_path}")
+
+# # Save the best model at Runs
+# run_best_model_path = os.path.join(run_dir, f"best_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+# shutil.copy(best_model_path, run_best_model_path)
+# print(f"Saved best model at: {best_model_path} and {run_best_model_path}")
+
+# # Save the latest model state at Runs
+# run_latest_model_path = os.path.join(run_dir, f"latest_metric_model_unet_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.pth")
+# shutil.copy(latest_model_path, run_latest_model_path)
+# print(f"Saved latest model state to {latest_model_path} and {run_latest_model_path}")
+
+# # Save the plot at Runs
+# run_plot_file_path = os.path.join(run_dir, f"metrics_unet_plot_{slurm_job_id}_{dataset_choice}_{learning_rate}_{max_epochs}.png")
+# shutil.copy(fname, run_plot_file_path)
+# print(f"Plot saved to {fname} and {run_plot_file_path}")      
+
+# # Save the test dataset at Runs
+# run_test_dataset_path = os.path.join(run_dir, f"test_dataset_{slurm_job_id}_{dataset_choice}.json")
+# shutil.copy(test_dataset_path, run_test_dataset_path)
+# print(f"Testing dataset saved to {test_dataset_path} and {run_test_dataset_path}")
+
+# # Save output and error at Runs
+# slurm_output_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_output.txt"
+# slurm_error_file = f"/lustre/groups/iterm/Hazem/MA/HPC/slurm_outputs/3D_Seg_{slurm_job_id}_error.txt"
+# run_slurm_output_file = os.path.join(run_dir, f"3D_Seg_{slurm_job_id}_0_output.txt")
+# run_slurm_error_file = os.path.join(run_dir, f"3D_Seg_{slurm_job_id}_0_error.txt")
+
+# shutil.copy(slurm_output_file, run_slurm_output_file)
+# shutil.copy(slurm_error_file, run_slurm_error_file)
+# print(f"Slurm output file copied to {run_slurm_output_file}")
+# print(f"Slurm error file copied to {run_slurm_error_file}")
+# ##################################
+# #final print
+# print("-" * 40)
+# print("ALL DONE!") 
