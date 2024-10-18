@@ -59,6 +59,10 @@ import warnings
 warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 #print_config()
 ##################################
+
+import time
+start_time = time.time()
+##################################
 #SLURM_JOB_ID
 slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
 
