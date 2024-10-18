@@ -442,6 +442,8 @@ classification_state_dict['unet.model.0.conv.weight'] = modified_first_layer_wei
 # # Assign the modified weights
 # segmentation_state_dict[seg_first_layer_name] = modified_first_layer_weights
 
+print("First Layer adjusted!")
+
 #####################################
 #SAME for the ninth layer!
 # 1. Extract the Ninth Layer Weights from the Classification Model:
@@ -456,7 +458,7 @@ modified_ninth_layer_weights = class_ninth_layer_weights.mean(dim=1, keepdim=Tru
 #Note: By updating the classification_state_dict, you ensure that when you proceed with your existing weight transfer loop, the first layer weights will be transferred correctly
 classification_state_dict['unet.model.2.conv.weight'] = modified_ninth_layer_weights
 
-
+print("Ninth Layer adjusted!")
 #################################################################################
 
 
