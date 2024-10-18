@@ -1,4 +1,4 @@
-print("START!")
+print("START! One Channel")
 ##################################
 
 import numpy as np
@@ -59,6 +59,10 @@ import warnings
 warnings.filterwarnings("ignore")  # remove some scikit-image warnings
 #print_config()
 ##################################
+import time
+start_time = time.time()
+##################################
+
 #SLURM_JOB_ID
 slurm_job_id = os.environ.get('SLURM_JOB_ID', 'default_job_id')
 
@@ -74,7 +78,7 @@ learning_rate = hyperparameters["learning_rate"]
 max_epochs = hyperparameters["max_epochs"]
 
 # Conditional batch size and val_interval based on max_epochs
-if max_epochs in [10, 50, 100]:
+if max_epochs == 100: 
     batch_size = 4 #immer 8
     val_interval = 5
 elif max_epochs in [1000, 4000, 8000]:
@@ -91,7 +95,6 @@ scheduler_params = hyperparameters.get("scheduler", None)
 
 # Extract the chosen scheduler from the hyperparameters
 chosen_scheduler_name = hyperparameters.get("chosen_scheduler", None)
-
 
 # Choose which scheduler to use based on the chosen_scheduler parameter
 chosen_scheduler = scheduler_params.get(chosen_scheduler_name) if scheduler_params and chosen_scheduler_name else None
@@ -128,7 +131,7 @@ os.makedirs(runs_dir, exist_ok=True)
 ##################################
 
 loss_function_name = "DiceCELoss"
-run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}_ECXLUDE_ENCODER"
+run_folder_name = f"run_{slurm_job_id}__{loss_function_name}_{chosen_scheduler_name}"
 run_dir = os.path.join(runs_dir, run_folder_name)
 os.makedirs(run_dir, exist_ok=True)
 ##################################
@@ -386,212 +389,6 @@ model = UNet(
     norm=Norm.BATCH,
 ).to(device)
 ##################################
-##################################
-# Transfer Learning Code Starts Here
-# Note: The segmentation model is defined and initialized before attempting to load any weights into it. The optimizer and loss function are defined after
-# the model weights are updated, which is important because the optimizer needs to know which parameters to optimize (and their current states).
-print("Transfer Learning Block begins!")
-print("Load Pretrained Weights from Classification Model")
-
-# path = path_to_classification_model_weights.pth #I chose really the best one --> testing score = 75% (Evaluation score = 83%)
-path_class_best_metric_model = "/lustre/groups/iterm/Hazem/MA/Runs/run_27339286__Phase_2/best_metric_model_classification3d_array_27339286_50_0.001.pth" 
-
-# Import the classification model
-from Classification_3D import UNetForClassification
-
-# Define and load the classification model
-classification_model = UNetForClassification()
-classification_model.load_state_dict(torch.load(path_class_best_metric_model)) #Loads the pretrained weights into the classification model(not yet to the segmentation one).
-classification_model.to(device) #This ensures that any operations performed on the model (like weight copying) are done on the same device as the segmentation model.
-classification_model.eval() #Sets the classification model to evaluation mode. This affects layers like dropout and batch normalization, which behave differently
-# during training and evaluation. While we're not performing inference or training with the classification model, setting it to evaluation mode is a good practice to
-# ensure consistent behavior if any operations depend on the model's mode. In other words, to disable layers like dropout and batch normalization from behaving differently.
-
-# Get state dictionaries (parameter names AND tensors) of both models: Classification & Segmentation
-classification_state_dict = classification_model.state_dict()
-segmentation_state_dict = model.state_dict()
-
-# Create a new state dictionary for the segmentation model
-new_state_dict = {} #It serves as a container to store the parameters from the classification model that you want to transfer to the segmentation model after adjusting
-#their names. By creating a new dictionary, you avoid altering the original state dictionaries of either model.
-# You'll populate new_state_dict with parameters that match between the models after mapping the names. AND
-# After populating, you'll update the segmentation model's state dictionary with new_state_dict.
-
-# Excluded parameters from the classification model
-# excluded_params = [
-#     # Encoder Layers
-#     # 1st layer parameters (ALWAYS EXCLUDED!)
-#     'unet.model.0.conv.weight',
-#     'unet.model.0.conv.bias',
-#     'unet.model.0.adn.A.weight',
-#     # 2nd layer parameters
-#     'unet.model.1.submodule.0.conv.bias',
-#     'unet.model.1.submodule.0.adn.A.weight',
-#     # 3rd layer parameters
-#     'unet.model.1.submodule.1.submodule.0.conv.bias',
-#     'unet.model.1.submodule.1.submodule.0.adn.A.weight',
-#     # 4th layer parameters
-#     'unet.model.1.submodule.1.submodule.1.submodule.0.conv.bias',
-#     'unet.model.1.submodule.1.submodule.1.submodule.0.adn.A.weight',
-
-#     # Bottleneck
-#     # 5th layer parameters
-#     'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight',
-#     'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.bias',
-#     'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.adn.A.weight',
-    
-#     # Decoder Layers
-#     # 6th layer parameters
-#     'unet.model.1.submodule.1.submodule.1.submodule.2.conv.weight',
-#     'unet.model.1.submodule.1.submodule.1.submodule.2.conv.bias',
-#     'unet.model.1.submodule.1.submodule.1.submodule.2.adn.A.weight',
-#     # 7th layer parameters
-#     'unet.model.1.submodule.1.submodule.2.conv.weight',
-#     'unet.model.1.submodule.1.submodule.2.conv.bias',
-#     'unet.model.1.submodule.1.submodule.2.adn.A.weight',
-#     # 8th layer parameters
-#     'unet.model.1.submodule.2.conv.weight',
-#     'unet.model.1.submodule.2.conv.bias',
-#     'unet.model.1.submodule.2.adn.A.weight',
-#     # 9th layer parameters (ALWAYS EXCLUDED!) (there is no adn layer here!!)
-#     'unet.model.2.conv.weight',
-#     'unet.model.2.conv.bias',
-    
-#     # Classification Layer
-#     'fc.weight',
-#     'fc.bias',
-# ]
-
-
-excluded_params = [
-    # Encoder Layers
-    # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!)
-    'unet.model.0.conv.weight',
-    'unet.model.0.conv.bias',
-    'unet.model.0.adn.A.weight',
-    # 2nd layer parameters
-    # 3rd layer parameters
-    # 4th layer parameters
-
-    # Bottleneck
-    # 5th layer parameters
-    'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight',
-    'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.conv.bias',
-    'unet.model.1.submodule.1.submodule.1.submodule.1.submodule.adn.A.weight',
-    
-    # Decoder Layers
-    # 6th layer parameters
-    'unet.model.1.submodule.1.submodule.1.submodule.2.conv.weight',
-    'unet.model.1.submodule.1.submodule.1.submodule.2.conv.bias',
-    'unet.model.1.submodule.1.submodule.1.submodule.2.adn.A.weight',
-    # 7th layer parameters
-    'unet.model.1.submodule.1.submodule.2.conv.weight',
-    'unet.model.1.submodule.1.submodule.2.conv.bias',
-    'unet.model.1.submodule.1.submodule.2.adn.A.weight',
-    # 8th layer parameters
-    'unet.model.1.submodule.2.conv.weight',
-    'unet.model.1.submodule.2.conv.bias',
-    'unet.model.1.submodule.2.adn.A.weight',
-    # 9th layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!) (there is no adn layer here!!)
-    'unet.model.2.conv.weight',
-    'unet.model.2.conv.bias',
-    # Classification Layer (excluded via 'fc' in name)
-
-]
-
-# Initialize a counter for the number of transferred parameters
-transfer_count = 0
-
-# Map and transfer the convolutional weights
-for name, param in classification_state_dict.items():
-    # Skip EXPLICITLY excluded parameters
-    if name in excluded_params:
-        continue 
-    # Skip the first convolutional layer due to input channel mismatch, and the NINTH layer due to output channel mismatch
-    # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
-    #     continue
-    # Skip biases, normalization layers, and fully connected layer
-    #if 'bias' in name or 'adn' in name or 'fc' in name:
-    if 'fc' in name:
-        continue
-     
-
-    # Map parameter names (adapting the classification name to the segmentation one, NOT vice versa!)
-    seg_name = name.replace('unet.model.', 'model.')
-
-    if 'adn' in seg_name:
-        # Handle 'adn' parameters separately
-        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
-            # Decoder layers
-            seg_name = seg_name.replace('.adn.', '.0.adn.')
-        else:
-            # Encoder and bottleneck layers
-            seg_name = seg_name.replace('.adn.', '.conv.unit0.adn.')
-    else:
-        # Handle convolutional weights and biases
-        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
-            # Decoder layers
-            seg_name = seg_name.replace('.conv.', '.0.conv.')
-        else:
-            # Encoder and bottleneck layers
-            seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
-    
-    # # Check if the parameter is in the decoder layers
-    # if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
-    #     # For decoder layers, insert '.0' before '.conv.unit0.conv'
-    #     seg_name = seg_name.replace('.conv.', '.0.conv.')
-        
-    # else:
-    #     # For encoder layers, use the existing mapping
-    #     seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
-    
-    # # seg_name = name.replace('unet.model.', 'model.')
-    # # seg_name = seg_name.replace('.conv.', '.conv.unit0.conv.')
-
-    #For debugging: Print original and mapped names
-    print(f"Original name: {name}, Mapped name: {seg_name}")
-
-    # Check if the parameter exists in the segmentation model
-    if seg_name in segmentation_state_dict: #Only transfer parameters where the names match.
-        if param.shape == segmentation_state_dict[seg_name].shape: #Only transfer parameters where the shapes are identical.
-            new_state_dict[seg_name] = param
-            print(f"Transferring {name} --> {seg_name}")
-            transfer_count += 1  # Increment the counter
-        else:
-            print(f"Shape mismatch: {name} ({param.shape}) vs {seg_name} ({segmentation_state_dict[seg_name].shape}), skipping.")
-    else:
-        print(f"{seg_name} not found in segmentation model, skipping.") 
-
-# After the loop, print the total number of transferred parameters
-print(f"Total number of parameters transferred: {transfer_count}")
-
-# Update the segmentation model's state dictionary 
-segmentation_state_dict.update(new_state_dict) #Updates the segmentation model's state dictionary with the transferred parameters.
-model.load_state_dict(segmentation_state_dict, strict=False) #This line loads the updated segmentation_state_dict (which now includes the transferred weights) into the segmentation model.
-#Use strict=False to avoid errors due to missing keys or unexpected keys. --> model.load_state_dict(segmentation_state_dict, strict=False)
-#Setting strict=False allows the model to load the state dict even if not all keys match. HOWEVER, this method may raise an error if there are unmatched keys, which is
-#likely given that you're not transferring all weights.
-#WARNING: strict=False MUST be included to avoid errors due to missing keys, especially since you're not transferring all weights.
-#when you are not initializing (transferring) all parameters in the segmentation model, setting strict=False in model.load_state_dict() is necessary.
-#strict=False: Allows the loading process to ignore missing or unexpected keys. && This is suitable when you're only loading a subset of the model's parameters (e.g., when
-#doing transfer learning and not transferring all weights).
-
-# Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
-# for name, param in model.named_parameters(): #Ensure that the parameter names in model.named_parameters() match those in new_state_dict.
-#     if name in new_state_dict:
-#         param.requires_grad = False #you prevent the optimizer from updating these parameters during training.
-#         print(f"Freezing layer: {name}")
-
-# print out the names and shapes of the transferred parameters to verify the transfer and ensure correctness:
-print("Transferred Parameters:")
-for name in new_state_dict:
-    print(f"{name}: {new_state_dict[name].shape}")
-
-
-# Transfer Learning Code Ends Here
-
-##################################
-##################################
 print("Create Loss")
 
 #include_background=True: Includes the background class in the loss calculation. For binary segmentation tasks, this parameter ensures that the loss accounts for both foreground and background pixels.
@@ -682,7 +479,7 @@ scaler = torch.cuda.amp.GradScaler() #Scaled gradient
 ##################################
 print("Execute a typical PyTorch training process")
 print("Dry Tesl ALL DONE")
-max_epochs = max_epochs #only 10 as a test
+'max_epochs = max_epochs #only 10 as a test
 val_interval = val_interval #from 2 to 1
 best_metric = -1
 best_metric_epoch = -1
@@ -1001,4 +798,14 @@ print(f"Slurm error file copied to {run_slurm_error_file}")
 ##################################
 #final print
 print("-" * 40)
+###################################'
+end_time = time.time()
+
+elapsed_time = end_time - start_time
+
+hours, rem = divmod(elapsed_time, 3600)
+minutes, seconds = divmod(rem, 60)
+print(f"Total Execution Time: {int(hours):02d}h {int(minutes):02d}m {seconds:.2f}s")
+print("-" * 40)
+##################################
 print("ALL DONE!") 
