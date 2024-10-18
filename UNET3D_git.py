@@ -798,7 +798,7 @@ print(f"Slurm error file copied to {run_slurm_error_file}")
 ##################################
 #final print
 print("-" * 40)
-# ##################################'
+###################################'
 end_time = time.time()
 
 elapsed_time = end_time - start_time

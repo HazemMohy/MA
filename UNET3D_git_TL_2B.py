@@ -1004,4 +1004,14 @@ print(f"Slurm error file copied to {run_slurm_error_file}")
 ##################################
 #final print
 print("-" * 40)
+###################################'
+end_time = time.time()
+
+elapsed_time = end_time - start_time
+
+hours, rem = divmod(elapsed_time, 3600)
+minutes, seconds = divmod(rem, 60)
+print(f"Total Execution Time: {int(hours):02d}h {int(minutes):02d}m {seconds:.2f}s")
+print("-" * 40)
+##################################
 print("ALL DONE!")
