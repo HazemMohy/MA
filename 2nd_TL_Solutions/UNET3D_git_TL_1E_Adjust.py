@@ -424,19 +424,37 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 #################################################################################
 
 # Manipulating the first layer
-# Extract the First Layer Weights from the Classification Model:
+# 1. Extract the First Layer Weights from the Classification Model:
 class_first_layer_weights = classification_state_dict['unet.model.0.conv.weight']  # Shape: [out_channels, 1, k, k, k]
 
 #Option A: Duplicate the Weights Across Channels
 #Option A is generally preferred because it preserves the learned features and assumes both channels contribute similarly.
-#Duplicate the weights along the in_channels dimension
+# 2. Duplicate the weights along the in_channels dimension
 modified_first_layer_weights = class_first_layer_weights.repeat(1, 2, 1, 1, 1)  # Now shape: [out_channels, 2, k, k, k]
+
+# 3. Update the classification state dict with the modified weights
+#Note: By updating the classification_state_dict, you ensure that when you proceed with your existing weight transfer loop, the first layer weights will be transferred correctly.
+classification_state_dict['unet.model.0.conv.weight'] = modified_first_layer_weights
 
 # # Map the parameter name to match the segmentation model
 # seg_first_layer_name = 'model.0.conv.unit0.conv.weight'
 
 # # Assign the modified weights
 # segmentation_state_dict[seg_first_layer_name] = modified_first_layer_weights
+
+#####################################
+#SAME for the ninth layer!
+# 1. Extract the Ninth Layer Weights from the Classification Model:
+class_ninth_layer_weights = classification_state_dict['unet.model.2.conv.weight']  # Shape: [32, 32, 3, 3, 3]
+
+# Option A: Average the Weights Across Input Channels
+# Since the segmentation model expects an input channel size of 1, you can average the weights across the input channels.
+# 2. Average across the input channel dimension
+modified_ninth_layer_weights = class_ninth_layer_weights.mean(dim=1, keepdim=True)  # Shape: [32, 1, 3, 3, 3]
+
+# 3. Update the classification state dict with the modified weights
+#Note: By updating the classification_state_dict, you ensure that when you proceed with your existing weight transfer loop, the first layer weights will be transferred correctly
+classification_state_dict['unet.model.2.conv.weight'] = modified_ninth_layer_weights
 
 
 #################################################################################
