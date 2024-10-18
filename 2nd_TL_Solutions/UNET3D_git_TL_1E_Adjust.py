@@ -421,6 +421,28 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 # You'll populate new_state_dict with parameters that match between the models after mapping the names. AND
 # After populating, you'll update the segmentation model's state dictionary with new_state_dict.
 
+#################################################################################
+
+# Manipulating the first layer
+# Extract the First Layer Weights from the Classification Model:
+class_first_layer_weights = classification_state_dict['unet.model.0.conv.weight']  # Shape: [out_channels, 1, k, k, k]
+
+#Option A: Duplicate the Weights Across Channels
+#Option A is generally preferred because it preserves the learned features and assumes both channels contribute similarly.
+#Duplicate the weights along the in_channels dimension
+modified_first_layer_weights = class_first_layer_weights.repeat(1, 2, 1, 1, 1)  # Now shape: [out_channels, 2, k, k, k]
+
+# # Map the parameter name to match the segmentation model
+# seg_first_layer_name = 'model.0.conv.unit0.conv.weight'
+
+# # Assign the modified weights
+# segmentation_state_dict[seg_first_layer_name] = modified_first_layer_weights
+
+
+#################################################################################
+
+
+
 # Excluded parameters from the classification model
 # excluded_params = [
 #     # Encoder Layers
@@ -470,9 +492,9 @@ new_state_dict = {} #It serves as a container to store the parameters from the c
 excluded_params = [
     # Encoder Layers
     # 1st layer parameters (ALWAYS EXCLUDED!) (implemented in the below if condition, NOPE! here is better!)
-    'unet.model.0.conv.weight',
-    'unet.model.0.conv.bias',
-    'unet.model.0.adn.A.weight',
+    # 'unet.model.0.conv.weight',
+    # 'unet.model.0.conv.bias',
+    # 'unet.model.0.adn.A.weight',
     # 2nd layer parameters
     # 3rd layer parameters
     # 4th layer parameters
