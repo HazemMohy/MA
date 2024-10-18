@@ -7,9 +7,9 @@
 #SBATCH -p gpu_p
 #SBATCH --gres=gpu:1
 #SBATCH --mem=160G
-#SBATCH --time=2-00:00:00
+#SBATCH --time=4-00:00:00
 #SBATCH --nice=1
-#SBATCH --qos=gpu_normal
+#SBATCH --qos=gpu_long
 #SBATCH -w gpusrv42
 #SBATCH --exclude=supergpu15
 ##SBATCH --exclude=gpusrv[XX,YY],supergpuZZ
