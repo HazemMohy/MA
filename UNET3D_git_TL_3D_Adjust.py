@@ -551,7 +551,7 @@ for name, param in classification_state_dict.items():
 
     if 'adn' in seg_name:
         # Handle 'adn' parameters separately
-        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name or 'model.2' in seg_name:
             # Decoder layers
             seg_name = seg_name.replace('.adn.', '.0.adn.')
         else:
@@ -559,7 +559,7 @@ for name, param in classification_state_dict.items():
             seg_name = seg_name.replace('.adn.', '.conv.unit0.adn.')
     else:
         # Handle convolutional weights and biases
-        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name:
+        if 'submodule.2' in seg_name or 'submodule.1.submodule.2' in seg_name or 'submodule.1.submodule.1.submodule.2' in seg_name or 'model.2' in seg_name:
             # Decoder layers
             seg_name = seg_name.replace('.conv.', '.0.conv.')
         else:
