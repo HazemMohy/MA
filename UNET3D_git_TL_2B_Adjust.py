@@ -437,6 +437,7 @@ class_first_layer_weights = classification_state_dict['unet.model.0.conv.weight'
 #Option B: Average the Weights (If you believe the channels are similar, you can average the weights)
 modified_first_layer_weights = class_first_layer_weights / 2
 modified_first_layer_weights = torch.cat([modified_first_layer_weights, modified_first_layer_weights], dim=1)
+print("Option B in Action!")
 
 # 3. Update the classification state dict with the modified weights
 #Note: By updating the classification_state_dict, you ensure that when you proceed with your existing weight transfer loop, the first layer weights will be transferred correctly.
