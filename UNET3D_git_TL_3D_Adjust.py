@@ -448,15 +448,18 @@ print("First Layer adjusted!")
 #SAME for the ninth layer!
 # 1. Extract the Ninth Layer Weights from the Classification Model:
 class_ninth_layer_weights = classification_state_dict['unet.model.2.conv.weight']  # Shape: [32, 32, 3, 3, 3]
+class_ninth_layer_bias = classification_state_dict['unet.model.2.conv.bias']  # Shape: [32]
 
 # Option A: Average the Weights Across Input Channels
 # Since the segmentation model expects an input channel size of 1, you can average the weights across the input channels.
 # 2. Average across the input channel dimension
 modified_ninth_layer_weights = class_ninth_layer_weights.mean(dim=1, keepdim=True)  # Shape: [32, 1, 3, 3, 3]
+modified_ninth_layer_bias = class_ninth_layer_bias.mean(dim=0, keepdim=True)  # Shape: [1]
 
 # 3. Update the classification state dict with the modified weights
 #Note: By updating the classification_state_dict, you ensure that when you proceed with your existing weight transfer loop, the first layer weights will be transferred correctly
 classification_state_dict['unet.model.2.conv.weight'] = modified_ninth_layer_weights
+classification_state_dict['unet.model.2.conv.bias'] = modified_ninth_layer_bias
 
 print("Ninth Layer adjusted!")
 #################################################################################
