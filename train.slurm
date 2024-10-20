@@ -10,8 +10,8 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nice=1
 #SBATCH --qos=gpu_normal
-#SBATCH -w supergpu02
-#SBATCH --exclude=supergpu15
+##SBATCH -w supergpu02
+##SBATCH --exclude=supergpu15
 ##SBATCH --exclude=gpusrv[XX,YY],supergpuZZ
 
 source /lustre/groups/iterm/Hazem/miniconda3/bin/activate Masterarbeit
