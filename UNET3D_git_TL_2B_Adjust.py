@@ -558,8 +558,8 @@ for name, param in classification_state_dict.items():
     # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
     #     continue
     # Skip biases, normalization layers, and fully connected layer
-    #if 'bias' in name or 'adn' in name or 'fc' in name:
-    if 'adn' in name or 'fc' in name:
+    if 'bias' in name or 'adn' in name or 'fc' in name:
+    #if 'adn' in name or 'fc' in name:
     #if 'fc' in name:
         continue
      
@@ -625,10 +625,10 @@ model.load_state_dict(segmentation_state_dict, strict=False) #This line loads th
 #doing transfer learning and not transferring all weights).
 
 #Freeze the transferred layers #HOWEVER, I will comment this whole tiny block at first. Maybe later, I will test the script with freezing
-for name, param in model.named_parameters(): #Ensure that the parameter names in model.named_parameters() match those in new_state_dict.
-    if name in new_state_dict:
-        param.requires_grad = False #you prevent the optimizer from updating these parameters during training.
-        print(f"Freezing layer: {name}")
+# for name, param in model.named_parameters(): #Ensure that the parameter names in model.named_parameters() match those in new_state_dict.
+#     if name in new_state_dict:
+#         param.requires_grad = False #you prevent the optimizer from updating these parameters during training.
+#         print(f"Freezing layer: {name}")
 
 # print out the names and shapes of the transferred parameters to verify the transfer and ensure correctness:
 print("Transferred Parameters:")
