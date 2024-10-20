@@ -430,14 +430,14 @@ class_first_layer_weights = classification_state_dict['unet.model.0.conv.weight'
 #Option A: Duplicate the Weights Across Channels
 #Option A is generally preferred because it preserves the learned features and assumes both channels contribute similarly.
 # 2. Duplicate the weights along the in_channels dimension
-#modified_first_layer_weights = class_first_layer_weights.repeat(1, 2, 1, 1, 1)  # Now shape: [out_channels, 2, k, k, k]
+modified_first_layer_weights = class_first_layer_weights.repeat(1, 2, 1, 1, 1)  # Now shape: [out_channels, 2, k, k, k]
 
 #OR
 
-#Option B: Average the Weights (If you believe the channels are similar, you can average the weights)
-modified_first_layer_weights = class_first_layer_weights / 2
-modified_first_layer_weights = torch.cat([modified_first_layer_weights, modified_first_layer_weights], dim=1)
-print("Option B in Action!")
+# #Option B: Average the Weights (If you believe the channels are similar, you can average the weights)
+# modified_first_layer_weights = class_first_layer_weights / 2
+# modified_first_layer_weights = torch.cat([modified_first_layer_weights, modified_first_layer_weights], dim=1)
+# print("Option B in Action!")
 
 
 # 3. Update the classification state dict with the modified weights
@@ -562,9 +562,9 @@ for name, param in classification_state_dict.items():
     # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
     #     continue
     # Skip biases, normalization layers, and fully connected layer
-    #if 'bias' in name or 'adn' in name or 'fc' in name:
+    if 'bias' in name or 'adn' in name or 'fc' in name:
     #if 'adn' in name or 'fc' in name:
-    if 'fc' in name:
+    #if 'fc' in name:
         continue
      
 
