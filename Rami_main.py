@@ -140,8 +140,8 @@ network_name    = "Hazem_Test"
 
 # Paths 
 path_gt         = "/lustre/groups/iterm/Hazem/MA/Runs/run_21121056__DiceCELoss_none/Rami_Voxel_gt" # Path to ground truth
-path_prediction = "/lustre/groups/iterm/Hazem/MA/Runs/run_28527005__DiceCELoss_None_EXCLUDE_ENCODER/Model_outputs_nifti" # Path to prediction
-path_result     = "/lustre/groups/iterm/Hazem/MA/Runs/run_28527005__DiceCELoss_None_EXCLUDE_ENCODER/Model_outputs_nifti" # Path where result csv is saved to
+path_prediction = "/lustre/groups/iterm/Hazem/MA/Runs/run_28527005__DiceCELoss_None_ECXLUDE_ENCODER/Model_outputs_nifti" # Path to prediction
+path_result     = "/lustre/groups/iterm/Hazem/MA/Runs/run_28527005__DiceCELoss_None_ECXLUDE_ENCODER/Model_outputs_nifti" # Path where result csv is saved to
 
 create_voxel_scores(path_gt, path_prediction, path_result, network_name)
 
