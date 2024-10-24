@@ -514,8 +514,8 @@ for name, param in classification_state_dict.items():
     #     continue
     # Skip biases, normalization layers, and fully connected layer
     #if 'bias' in name or 'adn' in name or 'fc' in name:
-    #if 'adn' in name or 'fc' in name:
-    if 'fc' in name:
+    if 'adn' in name or 'fc' in name:
+    #if 'fc' in name:
         continue
      
 
