@@ -543,15 +543,9 @@ for name, param in classification_state_dict.items():
     # if name == 'unet.model.0.conv.weight' or name == 'unet.model.2.conv.weight':
     #     continue
     # Skip biases, normalization layers, and fully connected layer
-<<<<<<< HEAD
     #if 'bias' in name or 'adn' in name or 'fc' in name:
     #if 'adn' in name or 'fc' in name:
     #if 'fc' in name:
-=======
-    #if 'bias' in name or 'adn' in name or 'fc' in name:
-    #if 'adn' in name or 'fc' in name:
-    #if 'fc' in name:
->>>>>>> 6aeeeb45062e7e9953079a72c5a39e79191b56de
         continue
      
 
