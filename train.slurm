@@ -10,7 +10,7 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nice=1
 #SBATCH --qos=gpu_normal
-#SBATCH -w gpusrv42
+#SBATCH -w gpusrv41
 ##SBATCH --exclude=supergpu15
 ##SBATCH --exclude=gpusrv[XX,YY],supergpuZZ
 
